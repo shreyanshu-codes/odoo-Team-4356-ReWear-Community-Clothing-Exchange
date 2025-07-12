@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { User, Item, Swap } from './types';
@@ -121,10 +122,10 @@ export const addSwap = (swap: Omit<Swap, 'id' | 'status' | 'createdAt'>): Swap =
   };
   setStore<Swap>('rewear_swaps', [...swaps, newSwap]);
   
-  // Also update item status to 'pending swap'
+  // Also update item status to 'pending_swap'
   const item = getItemById(swap.itemId);
   if (item) {
-    updateItem({ ...item, status: 'pending' });
+    updateItem({ ...item, status: 'pending_swap' });
   }
   return newSwap;
 }

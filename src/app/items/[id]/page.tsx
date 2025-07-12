@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -6,11 +7,12 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { getItemById, getUserById, addSwap, updateItem, updateUser, getItems } from '@/lib/mockApi';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { getItemById, getUserById, addSwap, updateItem, updateUser, getItems, getItemsByUserId } from '@/lib/mockApi';
 import type { Item, User } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft, Check, X, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ItemDetailPage() {
@@ -22,6 +24,9 @@ export default function ItemDetailPage() {
   const [item, setItem] = useState<Item | null>(null);
   const [uploader, setUploader] = useState<User | null>(null);
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
+  const [userItems, setUserItems] = useState<Item[]>([]);
+  const [selectedItemToSwap, setSelectedItemToSwap] = useState<Item | null>(null);
+  const [isSwapDialogOpen, setIsSwapDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -33,21 +38,30 @@ export default function ItemDetailPage() {
         const foundUploader = getUserById(foundItem.userId);
         setUploader(foundUploader || null);
         
-        // Fetch related items (simple logic for now)
         const allItems = getItems();
         setRelatedItems(
           allItems.filter(i => i.id !== foundItem.id && i.category === foundItem.category && i.status === 'available').slice(0, 4)
         );
+
+        if (user) {
+          setUserItems(getItemsByUserId(user.id).filter(i => i.status === 'available'));
+        }
       }
     }
-  }, [params.id]);
+  }, [params.id, user]);
 
   const handleSwapRequest = () => {
-    if (!user || !item) return;
+    if (!user || !item || !selectedItemToSwap) return;
     setIsLoading(true);
     try {
-      addSwap({ itemId: item.id, requesterId: user.id, ownerId: item.userId });
+      addSwap({ 
+        itemId: item.id, 
+        requesterId: user.id, 
+        ownerId: item.userId,
+        offeredItemId: selectedItemToSwap.id 
+      });
       toast({ title: 'Success', description: 'Swap request sent! The owner has been notified.' });
+      setIsSwapDialogOpen(false);
       router.push('/dashboard/swaps');
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to send swap request.' });
@@ -64,15 +78,12 @@ export default function ItemDetailPage() {
     }
     setIsLoading(true);
     try {
-      // Deduct points from redeemer
       const updatedUser = { ...user, points: user.points - item.points };
       updateUser(updatedUser);
       
-      // Mark item as swapped
       const updatedItem = { ...item, status: 'swapped' as const };
       updateItem(updatedItem);
       
-      // Refresh user in context
       refreshUser();
 
       toast({ title: 'Success!', description: `${item.title} has been redeemed.` });
@@ -154,13 +165,49 @@ export default function ItemDetailPage() {
                         </div>
                     )}
 
-                    <Button size="lg" className="w-full bg-accent hover:bg-accent/90" onClick={handleSwapRequest} disabled={!canTakeAction || isLoading}>
-                        Request Swap
-                    </Button>
+                    <Dialog open={isSwapDialogOpen} onOpenChange={setIsSwapDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="lg" className="w-full bg-accent hover:bg-accent/90" disabled={!canTakeAction || isLoading}>
+                          Request Swap
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Propose a Swap</DialogTitle>
+                          <DialogDescription>
+                            Select one of your available items to offer in exchange for "{item.title}".
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="max-h-[400px] overflow-y-auto space-y-2 p-1">
+                          {userItems.length > 0 ? userItems.map(userItem => (
+                            <Card 
+                              key={userItem.id}
+                              className={`flex items-center gap-4 p-3 cursor-pointer transition-all ${selectedItemToSwap?.id === userItem.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`}
+                              onClick={() => setSelectedItemToSwap(userItem)}
+                            >
+                              <Image src={userItem.images[0]} alt={userItem.title} width={48} height={48} className="rounded-md object-cover" data-ai-hint="fashion clothing" />
+                              <div className="flex-1">
+                                <p className="font-semibold">{userItem.title}</p>
+                                <p className="text-sm text-primary">{userItem.points} points</p>
+                              </div>
+                            </Card>
+                          )) : (
+                            <p className="text-center text-muted-foreground py-8">You have no available items to swap.</p>
+                          )}
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setIsSwapDialogOpen(false)}>Cancel</Button>
+                          <Button onClick={handleSwapRequest} disabled={!selectedItemToSwap || isLoading}>
+                            {isLoading ? <RefreshCw className="animate-spin" /> : 'Send Request'}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
                     <Button size="lg" className="w-full" variant="outline" onClick={handleRedeem} disabled={!canTakeAction || isLoading || (user?.points ?? 0) < item.points}>
                         Redeem with Points
                     </Button>
-                    {user && (user.points < item.points) && item.status === 'available' &&
+                    {user && !isOwner && item.status === 'available' && (user.points < item.points) &&
                         <p className="text-destructive text-sm mt-2 text-center">You don't have enough points for this item.</p>
                     }
                     {isOwner &&

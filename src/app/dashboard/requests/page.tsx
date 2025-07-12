@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,10 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X } from 'lucide-react';
+import { Check, X, RefreshCw } from 'lucide-react';
 
 interface EnrichedSwap extends Swap {
   item?: Item;
+  offeredItem?: Item;
   requester?: User;
 }
 
@@ -29,6 +31,7 @@ export default function SwapRequestsPage() {
       const enrichedSwaps = incomingSwaps.map(swap => ({
         ...swap,
         item: getItemById(swap.itemId),
+        offeredItem: swap.offeredItemId ? getItemById(swap.offeredItemId) : undefined,
         requester: getUserById(swap.requesterId),
       }));
       setRequests(enrichedSwaps);
@@ -48,22 +51,34 @@ export default function SwapRequestsPage() {
       if (newStatus === 'accepted') {
         const itemOwner = user;
         const itemRequester = swap.requester;
-        const item = swap.item;
+        const requestedItem = swap.item;
+        const offeredItem = swap.offeredItem;
 
-        // Transfer points
-        updateUser({ ...itemOwner, points: itemOwner.points + item.points });
-        updateUser({ ...itemRequester, points: itemRequester.points - item.points });
+        // Swap ownership if an item was offered
+        if(offeredItem) {
+            updateItem({ ...requestedItem, userId: itemRequester.id, status: 'available' });
+            updateItem({ ...offeredItem, userId: itemOwner.id, status: 'available' });
 
-        // Update item status to swapped
-        updateItem({ ...item, status: 'swapped' });
-        
-        toast({
-          title: "Swap Accepted!",
-          description: `You've swapped "${item.title}" with ${itemRequester.name}.`
-        });
+             toast({
+              title: "Swap Accepted!",
+              description: `You've traded "${requestedItem.title}" for "${offeredItem.title}".`
+            });
+        } else {
+            // This case handles swaps without an item offer (e.g., points-based, if implemented)
+            // For now, it just marks the item as swapped.
+            updateItem({ ...requestedItem, status: 'swapped' });
+             toast({
+              title: "Swap Accepted!",
+              description: `You've swapped "${requestedItem.title}" with ${itemRequester.name}.`
+            });
+        }
+
       } else {
-        // If rejected, make item available again
+        // If rejected, make both items available again
         updateItem({ ...swap.item, status: 'available' });
+        if (swap.offeredItem) {
+          updateItem({ ...swap.offeredItem, status: 'available' });
+        }
 
         toast({
           title: "Swap Rejected",
@@ -102,7 +117,7 @@ export default function SwapRequestsPage() {
             {requests.map(req => (
               <Card key={req.id}>
                 <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                   <div className="flex items-center gap-4">
+                   <div className="flex items-center gap-4 flex-1">
                         {req.item && (
                            <Image src={req.item.images[0]} alt={req.item.title} width={64} height={64} className="rounded-md object-cover" data-ai-hint="fashion clothing" />
                         )}
@@ -119,11 +134,22 @@ export default function SwapRequestsPage() {
                             </div>
                         </div>
                     </div>
+
+                    {req.offeredItem && (
+                       <div className="flex items-center gap-4 flex-1">
+                           <RefreshCw className="h-6 w-6 text-muted-foreground" />
+                            <Image src={req.offeredItem.images[0]} alt={req.offeredItem.title} width={64} height={64} className="rounded-md object-cover" data-ai-hint="fashion clothing" />
+                            <div>
+                                <p className="font-semibold text-lg">{req.offeredItem.title}</p>
+                                <p className="text-sm text-muted-foreground">Offered Item</p>
+                            </div>
+                        </div>
+                    )}
                   
                    <div className="flex items-center gap-2 self-end md:self-center">
                     {req.status === 'pending' ? (
                       <>
-                        <Button size="sm" onClick={() => handleSwapAction(req, 'accepted')} disabled={user.points < (req.item?.points || Infinity)}>
+                        <Button size="sm" onClick={() => handleSwapAction(req, 'accepted')}>
                           <Check className="mr-2 h-4 w-4" /> Accept
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => handleSwapAction(req, 'rejected')}>
