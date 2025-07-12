@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -73,6 +74,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'assets.ajio.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.grok.com',
         port: '',
         pathname: '/**',
       }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -50,7 +51,7 @@ export default function Home() {
           </div>
           <div className="mt-12">
             <div className="aspect-[21/9] w-full relative overflow-hidden rounded-2xl">
-                <Image src="https://placehold.co/1200x500.png" alt="Hero image" fill data-ai-hint="sustainable fashion" className="object-cover" />
+                <Image src="https://assets.grok.com/users/705eca55-d729-4d51-b651-e1fdcd394a84/generated/db56ebf4-b19e-4a69-8cd7-01745b2dab99/image.jpg" alt="Hero image" fill data-ai-hint="sustainable fashion" className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center p-8">
                     <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight">
                         Give Your Wardrobe a Second Life
