@@ -69,6 +69,12 @@ const nextConfig: NextConfig = {
         hostname: 'assets.digitalcontent.marksandspencer.app',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.ajio.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
