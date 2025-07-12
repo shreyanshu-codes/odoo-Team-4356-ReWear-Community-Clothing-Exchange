@@ -46,8 +46,8 @@ export default function ItemDetailPage() {
     setIsLoading(true);
     try {
       addSwap({ itemId: item.id, requesterId: user.id, ownerId: item.userId });
-      toast({ title: 'Success', description: 'Swap request sent!' });
-      router.push('/dashboard');
+      toast({ title: 'Success', description: 'Swap request sent! The owner has been notified.' });
+      router.push('/dashboard/swaps');
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to send swap request.' });
     } finally {

@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Shirt, PlusCircle, History, User } from 'lucide-react';
+import { LayoutDashboard, Shirt, PlusCircle, History, User, GitPullRequest } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/items', label: 'My Items', icon: Shirt },
   { href: '/dashboard/add-item', label: 'List New Item', icon: PlusCircle },
   { href: '/dashboard/swaps', label: 'Swap History', icon: History },
+  { href: '/dashboard/requests', label: 'Swap Requests', icon: GitPullRequest },
   { href: '/dashboard/profile', label: 'Profile', icon: User },
 ];
 

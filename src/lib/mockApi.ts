@@ -18,9 +18,6 @@ const initializeLocalStorage = () => {
     ];
     localStorage.setItem('rewear_users', JSON.stringify(initialUsers));
   }
-
-  // Clear old items to replace with new ones
-  localStorage.removeItem('rewear_items');
   
   if (!localStorage.getItem('rewear_items')) {
     const initialItems: Item[] = [
@@ -41,7 +38,7 @@ const initializeLocalStorage = () => {
 
   if (!localStorage.getItem('rewear_swaps')) {
     const initialSwaps: Swap[] = [
-       { id: 1, itemId: 7, requesterId: 3, ownerId: 2, status: "accepted", createdAt: new Date().toISOString() },
+       { id: 1, itemId: 7, requesterId: 3, ownerId: 2, status: "completed", createdAt: new Date().toISOString() },
     ];
     localStorage.setItem('rewear_swaps', JSON.stringify(initialSwaps));
   }
@@ -113,6 +110,8 @@ export const deleteItem = (itemId: number): void => {
 // Swap Functions
 export const getSwaps = (): Swap[] => getStore<Swap>('rewear_swaps');
 export const getSwapsByUserId = (userId: number): Swap[] => getSwaps().filter(s => s.requesterId === userId || s.ownerId === userId);
+export const getIncomingSwapsByUserId = (userId: number): Swap[] => getSwaps().filter(s => s.ownerId === userId && s.status === 'pending');
+
 export const addSwap = (swap: Omit<Swap, 'id' | 'status' | 'createdAt'>): Swap => {
   const swaps = getSwaps();
   const newSwap: Swap = {
@@ -125,10 +124,14 @@ export const addSwap = (swap: Omit<Swap, 'id' | 'status' | 'createdAt'>): Swap =
   // Also update item status
   const item = getItemById(swap.itemId);
   if (item) {
-    item.status = 'pending';
-    updateItem(item);
+    updateItem({ ...item, status: 'pending' });
   }
   return newSwap;
 }
 
-    
+export const updateSwap = (updatedSwap: Swap): Swap | undefined => {
+    let swaps = getSwaps();
+    swaps = swaps.map(swap => swap.id === updatedSwap.id ? updatedSwap : swap);
+    setStore('rewear_swaps', swaps);
+    return updatedSwap;
+};
