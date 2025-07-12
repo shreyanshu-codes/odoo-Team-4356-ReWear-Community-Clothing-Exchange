@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -28,50 +29,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserData = useCallback(async (firebase_user: FirebaseAuthUser | null) => {
     if (firebase_user) {
+      setFirebaseUser(firebase_user);
       const userDocRef = doc(db, 'users', firebase_user.uid);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as User;
         setUser({ ...userData, id: firebase_user.uid });
       } else {
-        // Fallback for mock users during transition
         const mockUser = api.getUserByEmail(firebase_user.email!);
         if (mockUser) {
            const { id, ...mockData } = mockUser;
            const newUser: User = { ...mockData, id: firebase_user.uid, role: 'user' };
            await setDoc(userDocRef, { ...newUser, createdAt: serverTimestamp() });
            setUser(newUser);
+        } else {
+          setUser(null);
         }
       }
     } else {
+      setFirebaseUser(null);
       setUser(null);
     }
-    setFirebaseUser(firebase_user);
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, fetchUserData);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        fetchUserData(user);
+    });
     return () => unsubscribe();
   }, [fetchUserData]);
 
   const refreshUser = useCallback(async () => {
-    if (firebaseUser) {
+    if (auth.currentUser) {
       setLoading(true);
-      await fetchUserData(firebaseUser);
-      setLoading(false);
+      await fetchUserData(auth.currentUser);
     }
-  }, [firebaseUser, fetchUserData]);
+  }, [fetchUserData]);
 
   const login = async (email: string, password: string): Promise<User | null> => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    if (userCredential.user) {
-      const userDocRef = doc(db, 'users', userCredential.user.uid);
+    const fbUser = userCredential.user;
+    if (fbUser) {
+      const userDocRef = doc(db, 'users', fbUser.uid);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as User;
-        const finalUser = { ...userData, id: userCredential.user.uid };
+        const finalUser = { ...userData, id: fbUser.uid };
         setUser(finalUser);
+        setFirebaseUser(fbUser);
         return finalUser;
       }
     }
@@ -80,17 +86,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (name: string, email: string, password: string): Promise<User | null> => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    if (userCredential.user) {
+    const fbUser = userCredential.user;
+    if (fbUser) {
         const newUser: User = {
-            id: userCredential.user.uid,
+            id: fbUser.uid,
             name,
             email,
             points: 500,
             role: email === 'admin@rewear.com' ? 'admin' : 'user',
             avatarUrl: `https://placehold.co/100x100.png`,
         };
-        await setDoc(doc(db, 'users', userCredential.user.uid), { ...newUser, createdAt: serverTimestamp() });
+        await setDoc(doc(db, 'users', fbUser.uid), { ...newUser, createdAt: serverTimestamp() });
         setUser(newUser);
+        setFirebaseUser(fbUser);
         return newUser;
     }
     return null;
@@ -105,7 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, firebaseUser, login, signup, logout, loading, refreshUser }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
