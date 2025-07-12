@@ -19,21 +19,25 @@ const initializeLocalStorage = () => {
     localStorage.setItem('rewear_users', JSON.stringify(initialUsers));
   }
 
+  // Clear old items to replace with new ones
+  localStorage.removeItem('rewear_items');
+  
   if (!localStorage.getItem('rewear_items')) {
     const initialItems: Item[] = [
-      { id: 1, title: "Vintage Denim Jacket", description: "A classic denim jacket from the 90s. In great condition.", userId: 2, images: ["https://offduty.in/cdn/shop/files/OD-MAY-5927_1_1080x.webp?v=1717056805"], category: "Jackets", type: "Casual", size: "M", condition: "Gently Used", tags: ["vintage", "denim"], status: "available", points: 20 },
-      { id: 2, title: "Summer Floral Dress", description: "Light and airy floral dress, perfect for summer. Worn only a few times.", userId: 2, images: ["https://offduty.in/cdn/shop/files/IMG_80852_1080x.webp?v=1727295674"], category: "Dresses", type: "Casual", size: "S", condition: "Gently Used", tags: ["summer", "floral"], status: "available", points: 15 },
-      { id: 3, title: "Formal Black Trousers", description: "Classic black trousers for formal occasions. Excellent condition.", userId: 3, images: ["https://offduty.in/cdn/shop/files/OD-MAY-5867_1_1080x.webp?v=1717056687"], category: "Pants", type: "Formal", size: "L", condition: "Gently Used", tags: ["formal", "work"], status: "pending", points: 25 },
-      { id: 4, title: "Graphic T-Shirt", description: "Cool graphic tee with a retro design.", userId: 3, images: ["https://offduty.in/cdn/shop/files/OD-AUG-23-38_1_8f170425-ade2-4a8e-a22c-a5b6c75f6610_1080x.webp?v=1727333555"], category: "Tops", type: "Casual", size: "M", condition: "Used", tags: ["graphic", "cotton"], status: "swapped", points: 10 },
-      { id: 5, title: "Wool Scarf", description: "Warm wool scarf for winter.", userId: 2, images: ["https://offduty.in/cdn/shop/products/OD-Jan-Batch-2-120_1080x.webp?v=1678278272"], category: "Accessories", type: "Casual", size: "M", condition: "New", tags: ["winter", "wool"], status: "available", points: 10 },
-      { id: 6, title: "Running Sneakers", description: "Comfortable running sneakers, used but still in good shape.", userId: 3, images: ["https://placehold.co/600x600.png"], category: "Accessories", type: "Sport", size: "L", condition: "Used", tags: ["sports", "sneakers"], status: "available", points: 30 },
+      { id: 1, title: "Aesthetic Anime Printed T-shirt", description: "Oversized T-shirt with a unique aesthetic anime print. Perfect for a casual, stylish look.", userId: 2, images: ["https://thalasiknitfab.com/cdn/shop/files/TTS_661_ANIME_wOMEN_3_490x@2x.progressive.png.jpg?v=1696401980"], category: "Tops", type: "Casual", size: "M", condition: "New", tags: ["anime", "oversized", "aesthetic"], status: "available", points: 18 },
+      { id: 2, title: "Women Baggy Blue Wide Leg Jeans", description: "High-rise, stretchable baggy jeans for a comfortable and trendy fit.", userId: 2, images: ["https://assets.myntassets.com/w_412,q_60,dpr_2,fl_progressive/assets/images/25750064/2024/1/29/cfd8b277-d480-404d-a097-e6f8ad15edb71706507368324-The-Roadster-Life-Co-Women-Baggy-Blue-Wide-Leg-Stretchable-J-4.jpg"], category: "Pants", type: "Casual", size: "L", condition: "Gently Used", tags: ["baggy", "jeans", "high-rise"], status: "available", points: 22 },
+      { id: 3, title: "Vintage Washed Wide Leg Baggy Jeans", description: "Tinted vintage wash baggy jeans with a wide leg. A real statement piece.", userId: 3, images: ["https://offduty.in/cdn/shop/files/IMG_2367_1400x.heic?v=1747200522"], category: "Pants", type: "Casual", size: "M", condition: "Used", tags: ["vintage", "wide-leg"], status: "available", points: 20 },
+      { id: 4, title: "Breathable Baggy Cargo Pants", description: "Light and breathable baggy cargo pants. Ideal for a relaxed, utilitarian style.", userId: 3, images: ["https://littleboxindia.com/cdn/shop/files/28d_d3808282-d2fc-45e4-88eb-23cb4910b970.jpg?v=1740750143"], category: "Pants", type: "Casual", size: "S", condition: "Gently Used", tags: ["cargo", "baggy"], status: "pending", points: 15 },
+      { id: 5, title: "White Ribbed Drawstring Crop Top", description: "A cute and simple white ribbed crop top with an adjustable drawstring front.", userId: 2, images: ["https://d1it09c4puycyh.cloudfront.net/catalog/product/j/r/jr2492_w.jpg"], category: "Tops", type: "Casual", size: "S", condition: "New", tags: ["crop-top", "white", "ribbed"], status: "available", points: 12 },
+      { id: 6, title: "Men's Regular Casual Pants", description: "Comfortable and versatile casual pants for men, suitable for everyday wear.", userId: 3, images: ["https://m.media-amazon.com/images/I/91qdN8vNgAL._UY1100_.jpg"], category: "Pants", type: "Casual", size: "L", condition: "Used", tags: ["casual", "men"], status: "available", points: 14 },
+      { id: 7, title: "Butterfly Print Top for Women", description: "Stylish and modern top for women with a subtle butterfly print.", userId: 2, images: ["https://i.pinimg.com/474x/f7/a8/f2/f7a8f24c1bb94860f3915760ceb02515.jpg"], category: "Tops", type: "Casual", size: "M", condition: "Gently Used", tags: ["stylish", "print"], status: "swapped", points: 10 },
     ];
     localStorage.setItem('rewear_items', JSON.stringify(initialItems));
   }
 
   if (!localStorage.getItem('rewear_swaps')) {
     const initialSwaps: Swap[] = [
-       { id: 1, itemId: 4, requesterId: 2, ownerId: 3, status: "accepted", createdAt: new Date().toISOString() },
+       { id: 1, itemId: 7, requesterId: 3, ownerId: 2, status: "accepted", createdAt: new Date().toISOString() },
     ];
     localStorage.setItem('rewear_swaps', JSON.stringify(initialSwaps));
   }
