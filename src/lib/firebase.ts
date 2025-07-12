@@ -20,7 +20,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+// Auth is no longer managed by Firebase, but we might still need the instance if other services depend on it.
+// For now, it's safer to keep it. We are not using it for user login/signup.
+const auth = getAuth(app); 
 const db = getFirestore(app);
 const storage = getStorage(app);
 

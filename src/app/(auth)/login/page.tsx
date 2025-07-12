@@ -19,7 +19,6 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { Recycle } from 'lucide-react';
-import { FirebaseError } from 'firebase/app';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 const formSchema = z.object({
@@ -43,42 +42,28 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    try {
-      const user = await login(values.email, values.password);
-      if (user) {
-        toast({
-          title: "Login Successful",
-          description: `Welcome back, ${user.name}!`,
-        });
-        if (user.role === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/dashboard');
-        }
-      }
-    } catch (error) {
-       let description = "Something went wrong. Please try again.";
-        if (error instanceof FirebaseError) {
-            switch (error.code) {
-                case 'auth/user-not-found':
-                case 'auth/wrong-password':
-                case 'auth/invalid-credential':
-                    description = 'Invalid email or password. Please try again.';
-                    break;
-                case 'auth/too-many-requests':
-                    description = 'Too many login attempts. Please try again later.';
-                    break;
-                default:
-                    description = 'An unexpected error occurred.';
-            }
-        }
+    const { user, error } = await login(values.email, values.password);
+    setIsLoading(false);
+
+    if (error) {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description,
+        description: error.message || "Invalid credentials. Please try again.",
       });
-    } finally {
-      setIsLoading(false);
+      return;
+    }
+
+    if (user) {
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${user.name}!`,
+      });
+      if (user.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     }
   }
 

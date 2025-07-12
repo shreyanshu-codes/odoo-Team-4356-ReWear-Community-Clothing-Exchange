@@ -3,17 +3,19 @@
 
 import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, type User as FirebaseAuthUser } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { Session, User as SupabaseAuthUser } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { User } from '@/lib/types';
 import * as api from '@/lib/mockApi';
 
 interface AuthContextType {
   user: User | null;
-  firebaseUser: FirebaseAuthUser | null;
-  login: (email: string, password: string) => Promise<User | null>;
-  signup: (name: string, email: string, password: string) => Promise<User | null>;
+  supabaseUser: SupabaseAuthUser | null;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ user: User | null; error: any | null }>;
+  signup: (name: string, email: string, password: string) => Promise<{ user: User | null; error: any | null }>;
   logout: () => void;
   loading: boolean;
   refreshUser: () => void;
@@ -23,96 +25,123 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseAuthUser | null>(null);
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseAuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchUserData = useCallback(async (firebase_user: FirebaseAuthUser | null) => {
-    if (firebase_user) {
-      setFirebaseUser(firebase_user);
-      const userDocRef = doc(db, 'users', firebase_user.uid);
+  const fetchUserData = useCallback(async (auth_user: SupabaseAuthUser | null) => {
+    if (auth_user) {
+      setSupabaseUser(auth_user);
+      const userDocRef = doc(db, 'users', auth_user.id);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as User;
-        setUser({ ...userData, id: firebase_user.uid });
+        setUser({ ...userData, id: auth_user.id });
       } else {
-        const mockUser = api.getUserByEmail(firebase_user.email!);
-        if (mockUser) {
-           const { id, ...mockData } = mockUser;
-           const newUser: User = { ...mockData, id: firebase_user.uid, role: 'user' };
-           await setDoc(userDocRef, { ...newUser, createdAt: serverTimestamp() });
-           setUser(newUser);
-        } else {
-          setUser(null);
-        }
+        // This handles cases where a user might exist in Supabase auth but not Firestore
+        // e.g., if Firestore document creation failed during signup.
+        setUser(null);
       }
     } else {
-      setFirebaseUser(null);
+      setSupabaseUser(null);
       setUser(null);
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-        fetchUserData(user);
-    });
-    return () => unsubscribe();
+    const getSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setSupabaseUser(session?.user ?? null);
+        await fetchUserData(session?.user ?? null);
+        setLoading(false);
+    }
+
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+        setSupabaseUser(session?.user ?? null);
+        await fetchUserData(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, [fetchUserData]);
+
 
   const refreshUser = useCallback(async () => {
-    if (auth.currentUser) {
+    if (supabaseUser) {
       setLoading(true);
-      await fetchUserData(auth.currentUser);
+      await fetchUserData(supabaseUser);
     }
-  }, [fetchUserData]);
+  }, [supabaseUser, fetchUserData]);
 
-  const login = async (email: string, password: string): Promise<User | null> => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const fbUser = userCredential.user;
-    if (fbUser) {
-      const userDocRef = doc(db, 'users', fbUser.uid);
+  const login = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      return { user: null, error };
+    }
+    if (data.user) {
+      const userDocRef = doc(db, 'users', data.user.id);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as User;
-        const finalUser = { ...userData, id: fbUser.uid };
+        const finalUser = { ...userData, id: data.user.id };
         setUser(finalUser);
-        setFirebaseUser(fbUser);
-        return finalUser;
+        return { user: finalUser, error: null };
       }
     }
-    return null;
+    return { user: null, error: { message: "User not found in database." } };
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<User | null> => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const fbUser = userCredential.user;
-    if (fbUser) {
-        const newUser: User = {
-            id: fbUser.uid,
-            name,
-            email,
-            points: 500,
-            role: email === 'admin@rewear.com' ? 'admin' : 'user',
-            avatarUrl: `https://placehold.co/100x100.png`,
-        };
-        await setDoc(doc(db, 'users', fbUser.uid), { ...newUser, createdAt: serverTimestamp() });
-        setUser(newUser);
-        setFirebaseUser(fbUser);
-        return newUser;
+  const signup = async (name: string, email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+        },
+      },
+    });
+
+    if (error) {
+      return { user: null, error };
     }
-    return null;
+
+    if (data.user) {
+      const newUser: User = {
+        id: data.user.id,
+        name,
+        email,
+        points: 500,
+        role: email === 'admin@rewear.com' ? 'admin' : 'user',
+        avatarUrl: `https://placehold.co/100x100.png`,
+      };
+      await setDoc(doc(db, 'users', data.user.id), { ...newUser, createdAt: serverTimestamp() });
+      setUser(newUser);
+      return { user: newUser, error: null };
+    }
+    return { user: null, error: { message: "Could not create user."} };
   };
 
   const logout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
     setUser(null);
-    setFirebaseUser(null);
+    setSupabaseUser(null);
+    setSession(null);
     router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, login, signup, logout, loading, refreshUser }}>
+    <AuthContext.Provider value={{ user, supabaseUser, session, login, signup, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

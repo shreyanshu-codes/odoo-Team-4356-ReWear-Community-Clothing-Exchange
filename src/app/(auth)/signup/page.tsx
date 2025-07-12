@@ -19,7 +19,6 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { Recycle } from 'lucide-react';
-import { FirebaseError } from 'firebase/app';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 const formSchema = z.object({
@@ -53,36 +52,24 @@ export default function SignupPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    try {
-      const user = await signup(values.name, values.email, values.password);
-      if (user) {
-        toast({
-          title: "Account Created!",
-          description: "Welcome to ReWear! You have been logged in.",
-        });
-        router.push('/dashboard');
-      }
-    } catch (error) {
-       let description = "An error occurred. Please try again.";
-        if (error instanceof FirebaseError) {
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    description = 'This email is already registered. Please log in.';
-                    break;
-                case 'auth/weak-password':
-                    description = 'The password is too weak.';
-                    break;
-                default:
-                    description = 'An unexpected error occurred during signup.';
-            }
-        }
+    const { user, error } = await signup(values.name, values.email, values.password);
+    setIsLoading(false);
+
+    if (error) {
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description,
+        description: error.message || "An error occurred. Please try again.",
       });
-    } finally {
-      setIsLoading(false);
+      return;
+    }
+
+    if (user) {
+      toast({
+        title: "Account Created!",
+        description: "Welcome to ReWear! Please check your email to confirm your account.",
+      });
+      router.push('/dashboard');
     }
   }
 
