@@ -26,57 +26,76 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchUserData = useCallback(async (auth_user: FirebaseAuthUser | null) => {
-    if (auth_user) {
-      const userDocRef = doc(db, 'users', auth_user.uid);
+  const fetchUserData = useCallback(async (auth_user: FirebaseAuthUser) => {
+    const userDocRef = doc(db, 'users', auth_user.uid);
+    try {
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as User;
         setUser({ ...userData, id: auth_user.uid });
       } else {
+        // This case might happen if user record in auth exists but not in firestore.
+        // For robustness, we can log out the user or create a firestore record.
+        // For now, we'll treat them as not fully logged in.
         setUser(null);
       }
-    } else {
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      // If fetching fails (e.g., offline), we might want to keep the user logged out in the state
       setUser(null);
     }
-    setFirebaseUser(auth_user);
-    setLoading(false);
   }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      await fetchUserData(user);
+      setLoading(true);
+      if (user) {
+        setFirebaseUser(user);
+        await fetchUserData(user);
+      } else {
+        setFirebaseUser(null);
+        setUser(null);
+      }
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, [fetchUserData]);
 
   const refreshUser = useCallback(async () => {
-    if (firebaseUser) {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
       setLoading(true);
-      await fetchUserData(firebaseUser);
+      setFirebaseUser(currentUser);
+      await fetchUserData(currentUser);
+      setLoading(false);
     }
-  }, [firebaseUser, fetchUserData]);
+  }, [fetchUserData]);
 
   const login = async (email: string, password: string) => {
+    setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const authUser = userCredential.user;
-      const userDocRef = doc(db, 'users', authUser.uid);
+      // onAuthStateChanged will handle setting the user state.
+      // We can refetch here if we want to return the user data immediately.
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as User;
-        const finalUser = { ...userData, id: authUser.uid };
-        setUser(finalUser);
+        const finalUser = { ...userData, id: userCredential.user.uid };
+        setLoading(false);
         return { user: finalUser, error: null };
       }
+      setLoading(false);
       return { user: null, error: { message: "User data not found." } };
     } catch (error: any) {
+      setLoading(false);
       return { user: null, error };
     }
   };
 
   const signup = async (name: string, email: string, password: string) => {
+    setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const authUser = userCredential.user;
@@ -91,18 +110,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       
       await setDoc(doc(db, 'users', authUser.uid), { ...newUser, createdAt: serverTimestamp() });
-      setUser(newUser);
-      
+      // onAuthStateChanged will handle setting the user state.
+      setLoading(false);
       return { user: newUser, error: null };
     } catch (error: any) {
+      setLoading(false);
       return { user: null, error };
     }
   };
 
   const logout = async () => {
     await signOut(auth);
-    setUser(null);
-    setFirebaseUser(null);
+    // onAuthStateChanged will clear user state.
     router.push('/');
   };
 
