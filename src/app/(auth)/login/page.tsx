@@ -8,13 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
   Form,
   FormControl,
   FormField,
@@ -26,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { Recycle } from 'lucide-react';
-import { getUserByEmail } from '@/lib/mockApi';
+import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -56,20 +49,32 @@ export default function LoginPage() {
           title: "Login Successful",
           description: `Welcome back, ${user.name}!`,
         });
-        router.push('/dashboard');
-      } else {
-        const userExists = getUserByEmail(values.email);
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: userExists ? "Incorrect password. Please try again." : "No account found with this email.",
-        });
+        if (user.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
       }
     } catch (error) {
+       let description = "Something went wrong. Please try again.";
+        if (error instanceof FirebaseError) {
+            switch (error.code) {
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                case 'auth/invalid-credential':
+                    description = 'Invalid email or password. Please try again.';
+                    break;
+                case 'auth/too-many-requests':
+                    description = 'Too many login attempts. Please try again later.';
+                    break;
+                default:
+                    description = 'An unexpected error occurred.';
+            }
+        }
       toast({
         variant: "destructive",
-        title: "An error occurred",
-        description: "Something went wrong. Please try again.",
+        title: "Login Failed",
+        description,
       });
     } finally {
       setIsLoading(false);

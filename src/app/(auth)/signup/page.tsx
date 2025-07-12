@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { Recycle } from 'lucide-react';
+import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -60,11 +61,24 @@ export default function SignupPage() {
         });
         router.push('/dashboard');
       }
-    } catch (error: any) {
+    } catch (error) {
+       let description = "An error occurred. Please try again.";
+        if (error instanceof FirebaseError) {
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    description = 'This email is already registered. Please log in.';
+                    break;
+                case 'auth/weak-password':
+                    description = 'The password is too weak.';
+                    break;
+                default:
+                    description = 'An unexpected error occurred during signup.';
+            }
+        }
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: error.message || "An error occurred. Please try again.",
+        description,
       });
     } finally {
       setIsLoading(false);
