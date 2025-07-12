@@ -88,6 +88,12 @@ const nextConfig: NextConfig = {
         hostname: 'images.jackjones.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.dennislingo.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
