@@ -83,7 +83,7 @@ export const addItem = (item: Omit<Item, 'id' | 'status' | 'points'>): Item => {
   const newItem: Item = { 
     ...item, 
     id: Date.now(), 
-    status: 'available',
+    status: 'pending', // Items now start as pending
     points: 10 // default points
   };
   setStore<Item>('rewear_items', [...items, newItem]);

@@ -11,15 +11,25 @@ import { addItem } from '@/lib/mockApi';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const MAX_FILE_SIZE = 5000000; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters."),
   description: z.string().min(10, "Description must be at least 10 characters."),
-  image: z.string().url("Please enter a valid image URL."),
+  image: z
+    .any()
+    .refine((files) => files?.length == 1, "Image is required.")
+    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      ".jpg, .jpeg, .png and .webp files are accepted."
+    ),
   category: z.enum(['Tops', 'Dresses', 'Pants', 'Jackets', 'Accessories']),
   type: z.enum(['Casual', 'Formal', 'Sport']),
   size: z.enum(['XS', 'S', 'M', 'L', 'XL']),
@@ -32,16 +42,32 @@ export default function AddItemPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
-      image: "",
+      image: undefined,
       tags: "",
     },
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      form.setValue("image", e.target.files);
+    } else {
+      setImagePreview(null);
+      form.setValue("image", undefined);
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -49,19 +75,30 @@ export default function AddItemPage() {
       return;
     }
     setIsLoading(true);
-    try {
-      addItem({
-        ...values,
-        userId: user.id,
-        images: [values.image], // Mocking image upload with a URL
-        tags: values.tags.split(',').map(tag => tag.trim()),
-      });
-      toast({ title: "Success!", description: "Your item has been listed." });
-      router.push('/dashboard/items');
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to list item. Please try again." });
-    } finally {
-      setIsLoading(false);
+
+    const file = values.image[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = () => {
+      try {
+        const base64Image = reader.result as string;
+        addItem({
+          ...values,
+          userId: user.id,
+          images: [base64Image],
+          tags: values.tags.split(',').map(tag => tag.trim()),
+        });
+        toast({ title: "Success!", description: "Your item has been listed for approval." });
+        router.push('/dashboard/items');
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to list item. Please try again." });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    reader.onerror = () => {
+        toast({ variant: "destructive", title: "Error", description: "Could not read the image file."});
+        setIsLoading(false);
     }
   }
 
@@ -96,13 +133,17 @@ export default function AddItemPage() {
                 </FormItem>
               )}
             />
-            <FormField
+             <FormField
               control={form.control}
               name="image"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL</FormLabel>
-                  <FormControl><Input placeholder="https://placehold.co/600x600.png" {...field} /></FormControl>
+                  <FormLabel>Image</FormLabel>
+                   {imagePreview && <img src={imagePreview} alt="Image Preview" className="w-32 h-32 object-cover rounded-md" />}
+                  <FormControl>
+                     <Input type="file" accept="image/png, image/jpeg, image/webp" onChange={handleImageChange} />
+                  </FormControl>
+                  <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
