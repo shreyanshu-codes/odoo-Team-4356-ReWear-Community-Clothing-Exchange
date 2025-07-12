@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -269,7 +270,7 @@ export default function AddItemPage() {
                                 handleImageUrlChange(e);
                             }} />
                           </FormControl>
-                          {imagePreview && <div className="relative w-full h-64 mt-2"><Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" /></div>}
+                          {imagePreview && <div className="relative w-full h-64 mt-2"><Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" data-ai-hint="fashion clothing" /></div>}
                           <FormMessage />
                         </FormItem>
                       )}
