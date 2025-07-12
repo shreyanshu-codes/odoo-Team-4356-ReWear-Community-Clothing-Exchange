@@ -90,7 +90,7 @@ export default function AdminPage() {
                 <Input placeholder="Search..." className="pl-8" />
             </div>
             <Avatar>
-                <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="user avatar" />
+                <AvatarImage src={user.avatarUrl} data-ai-hint="user avatar" />
                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
             </Avatar>
         </div>
@@ -111,7 +111,7 @@ export default function AdminPage() {
                         <CardContent className="p-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <Avatar>
-                                    <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="user avatar" />
+                                    <AvatarImage src={u.avatarUrl} data-ai-hint="user avatar" />
                                     <AvatarFallback>{getInitials(u.name)}</AvatarFallback>
                                 </Avatar>
                                 <div>

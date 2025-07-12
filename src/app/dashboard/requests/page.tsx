@@ -110,7 +110,7 @@ export default function SwapRequestsPage() {
                             <p className="font-semibold text-lg">{req.item?.title}</p>
                             <div className="flex items-center gap-2 mt-2">
                                 <Avatar className="h-6 w-6">
-                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={req.requester?.name} data-ai-hint="user avatar" />
+                                    <AvatarImage src={req.requester?.avatarUrl} alt={req.requester?.name} data-ai-hint="user avatar" />
                                     <AvatarFallback>{getInitials(req.requester?.name)}</AvatarFallback>
                                 </Avatar>
                                 <p className="text-sm text-muted-foreground">

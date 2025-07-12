@@ -12,9 +12,9 @@ const initializeLocalStorage = () => {
 
   if (!localStorage.getItem('rewear_users')) {
     const initialUsers: User[] = [
-      { id: 1, email: "admin@rewear.com", password: "password123!", name: "Admin", points: 100, role: "admin" },
-      { id: 2, email: "jane@rewear.com", password: "password123!", name: "Jane Doe", points: 50, role: "user" },
-      { id: 3, email: "john@rewear.com", password: "password123!", name: "John Smith", points: 30, role: "user" },
+      { id: 1, email: "admin@rewear.com", password: "password123!", name: "Admin", points: 100, role: "admin", avatarUrl: "https://placehold.co/100x100.png" },
+      { id: 2, email: "jane@rewear.com", password: "password123!", name: "Jane Doe", points: 50, role: "user", avatarUrl: "https://placehold.co/100x100.png" },
+      { id: 3, email: "john@rewear.com", password: "password123!", name: "John Smith", points: 30, role: "user", avatarUrl: "https://placehold.co/100x100.png" },
     ];
     localStorage.setItem('rewear_users', JSON.stringify(initialUsers));
   }
@@ -67,7 +67,8 @@ export const addUser = (user: Omit<User, 'id' | 'points' | 'role'>): User => {
     ...user, 
     id: Date.now(), 
     points: 10, // Starting points
-    role: 'user' 
+    role: 'user',
+    avatarUrl: `https://placehold.co/100x100.png`
   };
   setStore<User>('rewear_users', [...users, newUser]);
   return newUser;

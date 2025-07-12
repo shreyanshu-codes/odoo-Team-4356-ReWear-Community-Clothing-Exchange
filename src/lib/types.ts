@@ -6,6 +6,7 @@ export interface User {
   location?: string;
   points: number;
   role: 'user' | 'admin';
+  avatarUrl?: string;
 }
 
 export interface Item {
@@ -31,5 +32,3 @@ export interface Swap {
   status: 'pending' | 'accepted' | 'rejected' | 'completed';
   createdAt: string;
 }
-
-    

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -19,6 +20,11 @@ export default function ProfilePage() {
         description: "Your information has been saved.",
     });
   }
+  
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map((n) => n[0]).join('').toUpperCase();
+  };
 
   if (loading || !user) {
     return <div>Loading...</div>;
@@ -30,7 +36,14 @@ export default function ProfilePage() {
         <CardTitle>Your Profile</CardTitle>
         <CardDescription>View and manage your account details.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        <div className="flex items-center gap-4">
+            <Avatar className="h-20 w-20">
+                <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="user avatar" />
+                <AvatarFallback className="text-2xl">{getInitials(user.name)}</AvatarFallback>
+            </Avatar>
+            <Button variant="outline">Change Photo</Button>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="name">Name</Label>
           <Input id="name" defaultValue={user.name} />

@@ -17,7 +17,8 @@ import { getItemById, getUserById, addSwap, updateItem, updateUser } from '@/lib
 import type { Item, User } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, UserCircle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ItemDetailPage() {
   const params = useParams();
@@ -82,6 +83,11 @@ export default function ItemDetailPage() {
     } finally {
         setIsLoading(false);
     }
+  };
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map((n) => n[0]).join('').toUpperCase();
   };
 
   if (!item) {
@@ -151,7 +157,10 @@ export default function ItemDetailPage() {
           
           {uploader && (
             <div className="mt-6 border-t pt-6 flex items-center gap-3">
-              <UserCircle className="h-10 w-10 text-muted-foreground" />
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={uploader.avatarUrl} alt={uploader.name} data-ai-hint="user avatar" />
+                <AvatarFallback>{getInitials(uploader.name)}</AvatarFallback>
+              </Avatar>
               <div>
                 <p className="font-semibold">Listed by {uploader.name}</p>
                 <p className="text-sm text-muted-foreground">Joined on {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
