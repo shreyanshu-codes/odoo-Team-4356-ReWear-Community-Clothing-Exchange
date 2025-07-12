@@ -224,7 +224,7 @@ export default function AddItemPage() {
                     <FormItem>
                       <FormLabel>Image URL</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://example.com/image.png" {...field} onChange={handleImageUrlChange} />
+                        <Input placeholder="https://example.com/image.png" {...field} value={field.value ?? ""} onChange={handleImageUrlChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -333,5 +333,3 @@ export default function AddItemPage() {
     </Card>
   );
 }
-
-    
