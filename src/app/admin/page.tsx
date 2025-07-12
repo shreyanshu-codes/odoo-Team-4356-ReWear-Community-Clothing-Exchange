@@ -77,7 +77,7 @@ export default function AdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map(item => (
+                  {items.filter(item => item.status === 'pending').map(item => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.title}</TableCell>
                       <TableCell>{users.find(u => u.id === item.userId)?.name || 'Unknown'}</TableCell>
