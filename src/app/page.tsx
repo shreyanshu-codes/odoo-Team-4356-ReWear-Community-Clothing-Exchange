@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Item } from '@/lib/types';
 import { getItems } from '@/lib/mockApi';
-import { ArrowRight, Search, Shirt, ShoppingBag, Gift, RefreshCw, Handshake, CheckCircle } from 'lucide-react';
+import { ArrowRight, Shirt, RefreshCw, Handshake, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { Input } from '@/components/ui/input';
 
 export default function Home() {
   const [featuredItems, setFeaturedItems] = useState<Item[]>([]);
@@ -21,13 +20,6 @@ export default function Home() {
     setFeaturedItems(allItems.sort((a,b) => b.id - a.id).slice(0, 8));
   }, []);
   
-  const categories = [
-      { name: "Tops", icon: Shirt },
-      { name: "Pants", icon: ShoppingBag },
-      { name: "Dresses", icon: Gift },
-      { name: "Jackets", icon: Shirt },
-  ];
-
   const howItWorksSteps = [
     {
       icon: CheckCircle,

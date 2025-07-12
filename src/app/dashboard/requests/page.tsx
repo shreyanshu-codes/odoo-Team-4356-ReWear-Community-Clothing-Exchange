@@ -105,70 +105,72 @@ export default function SwapRequestsPage() {
   if (!user) return null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Incoming Swap Requests</CardTitle>
-        <CardDescription>Manage swap requests for your items from other users.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {requests.filter(r => r.status === 'pending').length > 0 ? (
-          <div className="space-y-4">
-            {requests.filter(r => r.status === 'pending').map(req => (
-              <Card key={req.id}>
-                <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                   <div className="flex items-center gap-4 flex-1">
-                        {req.item && (
-                           <Image src={req.item.images[0]} alt={req.item.title} width={64} height={64} className="rounded-md object-cover" data-ai-hint="fashion clothing" />
-                        )}
-                        <div>
-                            <p className="font-semibold text-lg">{req.item?.title}</p>
-                            <div className="flex items-center gap-2 mt-2">
-                                <Avatar className="h-6 w-6">
-                                    <AvatarImage src={req.requester?.avatarUrl} alt={req.requester?.name} data-ai-hint="user avatar" />
-                                    <AvatarFallback>{getInitials(req.requester?.name)}</AvatarFallback>
-                                </Avatar>
-                                <p className="text-sm text-muted-foreground">
-                                    Requested by <span className="font-medium text-foreground">{req.requester?.name}</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+    <div className="container mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>Incoming Swap Requests</CardTitle>
+          <CardDescription>Manage swap requests for your items from other users.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {requests.filter(r => r.status === 'pending').length > 0 ? (
+            <div className="space-y-4">
+              {requests.filter(r => r.status === 'pending').map(req => (
+                <Card key={req.id}>
+                  <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                     <div className="flex items-center gap-4 flex-1">
+                          {req.item && (
+                             <Image src={req.item.images[0]} alt={req.item.title} width={64} height={64} className="rounded-md object-cover" data-ai-hint="fashion clothing" />
+                          )}
+                          <div>
+                              <p className="font-semibold text-lg">{req.item?.title}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                  <Avatar className="h-6 w-6">
+                                      <AvatarImage src={req.requester?.avatarUrl} alt={req.requester?.name} data-ai-hint="user avatar" />
+                                      <AvatarFallback>{getInitials(req.requester?.name)}</AvatarFallback>
+                                  </Avatar>
+                                  <p className="text-sm text-muted-foreground">
+                                      Requested by <span className="font-medium text-foreground">{req.requester?.name}</span>
+                                  </p>
+                              </div>
+                          </div>
+                      </div>
 
-                    {req.offeredItem && (
-                       <div className="flex items-center gap-4 flex-1">
-                           <RefreshCw className="h-6 w-6 text-muted-foreground" />
-                            <Image src={req.offeredItem.images[0]} alt={req.offeredItem.title} width={64} height={64} className="rounded-md object-cover" data-ai-hint="fashion clothing" />
-                            <div>
-                                <p className="font-semibold text-lg">{req.offeredItem.title}</p>
-                                <p className="text-sm text-muted-foreground">Offered Item</p>
-                            </div>
-                        </div>
-                    )}
-                  
-                   <div className="flex items-center gap-2 self-end md:self-center">
-                    {req.status === 'pending' ? (
-                      <>
-                        <Button size="sm" onClick={() => handleSwapAction(req, 'accepted')}>
-                          <Check className="mr-2 h-4 w-4" /> Accept
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleSwapAction(req, 'rejected')}>
-                          <X className="mr-2 h-4 w-4" /> Reject
-                        </Button>
-                      </>
-                    ) : (
-                      <Badge variant={req.status === 'accepted' ? 'default' : 'destructive'}>{req.status}</Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">You have no incoming swap requests.</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                      {req.offeredItem && (
+                         <div className="flex items-center gap-4 flex-1">
+                             <RefreshCw className="h-6 w-6 text-muted-foreground" />
+                              <Image src={req.offeredItem.images[0]} alt={req.offeredItem.title} width={64} height={64} className="rounded-md object-cover" data-ai-hint="fashion clothing" />
+                              <div>
+                                  <p className="font-semibold text-lg">{req.offeredItem.title}</p>
+                                  <p className="text-sm text-muted-foreground">Offered Item</p>
+                              </div>
+                          </div>
+                      )}
+                    
+                     <div className="flex items-center gap-2 self-end md:self-center">
+                      {req.status === 'pending' ? (
+                        <>
+                          <Button size="sm" onClick={() => handleSwapAction(req, 'accepted')}>
+                            <Check className="mr-2 h-4 w-4" /> Accept
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleSwapAction(req, 'rejected')}>
+                            <X className="mr-2 h-4 w-4" /> Reject
+                          </Button>
+                        </>
+                      ) : (
+                        <Badge variant={req.status === 'accepted' ? 'default' : 'destructive'}>{req.status}</Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">You have no incoming swap requests.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -41,57 +41,59 @@ export default function SwapHistoryPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Swap History</CardTitle>
-        <CardDescription>An overview of all your past and pending swaps.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {swaps.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {swaps.map(swap => (
-                <TableRow key={swap.id}>
-                  <TableCell>
-                    {swap.item ? (
-                      <Link href={`/items/${swap.item.id}`} className="flex items-center gap-3 group">
-                        <Image
-                          src={swap.item.images[0]}
-                          alt={swap.item.title}
-                          width={40}
-                          height={40}
-                          className="rounded-md object-cover"
-                          data-ai-hint="fashion clothing"
-                        />
-                        <span className="font-medium group-hover:underline">{swap.item.title}</span>
-                      </Link>
-                    ) : (
-                      'Unknown Item'
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{getSwapParty(swap)}</TableCell>
-                  <TableCell>
-                    <Badge variant={swap.status === 'accepted' ? 'default' : swap.status === 'rejected' ? 'destructive' : 'secondary'}>{swap.status}</Badge>
-                  </TableCell>
-                  <TableCell>{new Date(swap.createdAt).toLocaleDateString()}</TableCell>
+    <div className="container mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>Swap History</CardTitle>
+          <CardDescription>An overview of all your past and pending swaps.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {swaps.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item</TableHead>
+                  <TableHead>Details</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">You have no swap history yet.</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              </TableHeader>
+              <TableBody>
+                {swaps.map(swap => (
+                  <TableRow key={swap.id}>
+                    <TableCell>
+                      {swap.item ? (
+                        <Link href={`/items/${swap.item.id}`} className="flex items-center gap-3 group">
+                          <Image
+                            src={swap.item.images[0]}
+                            alt={swap.item.title}
+                            width={40}
+                            height={40}
+                            className="rounded-md object-cover"
+                            data-ai-hint="fashion clothing"
+                          />
+                          <span className="font-medium group-hover:underline">{swap.item.title}</span>
+                        </Link>
+                      ) : (
+                        'Unknown Item'
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{getSwapParty(swap)}</TableCell>
+                    <TableCell>
+                      <Badge variant={swap.status === 'accepted' ? 'default' : swap.status === 'rejected' ? 'destructive' : 'secondary'}>{swap.status}</Badge>
+                    </TableCell>
+                    <TableCell>{new Date(swap.createdAt).toLocaleDateString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">You have no swap history yet.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

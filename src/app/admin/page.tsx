@@ -13,9 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, Eye, Search, UserCircle, Shirt } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Shirt } from 'lucide-react';
 
 interface EnrichedSwap extends Swap {
   item?: Item;

@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { getItemsByUserId, getSwapsByUserId, getItemById } from '@/lib/mockApi';
 import type { Item, Swap } from '@/lib/types';
 import { ArrowRight } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface EnrichedSwap extends Swap {
@@ -49,7 +48,7 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 container mx-auto">
       <Card>
         <CardContent className="p-6 flex items-center gap-6">
           <Avatar className="h-24 w-24 border">

@@ -185,216 +185,218 @@ export default function AddItemPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>List a New Item</CardTitle>
-        <CardDescription>Fill out the details below to add a new item to the swap marketplace.</CardDescription>
-      </CardHeader>
-      <CardContent>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-10">
-            <div className="space-y-6">
-                <Card className="p-6">
-                    <FormField
-                      control={form.control}
-                      name="uploadType"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>Image Source</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={(value) => {
-                                field.onChange(value);
-                                setImagePreview(null);
-                                form.setValue('imageFile', undefined, { shouldValidate: true });
-                                form.setValue('imageUrl', '', { shouldValidate: true });
-                              }}
-                              defaultValue={field.value}
-                              className="flex space-x-4"
-                            >
-                              <FormItem className="flex items-center space-x-2">
-                                <FormControl>
-                                  <RadioGroupItem value="local" id="local" />
-                                </FormControl>
-                                <Label htmlFor="local">Upload</Label>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-2">
-                                <FormControl>
-                                  <RadioGroupItem value="url" id="url" />
-                                </FormControl>
-                                <Label htmlFor="url">URL</Label>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {uploadType === 'local' ? (
+    <div className="container mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>List a New Item</CardTitle>
+          <CardDescription>Fill out the details below to add a new item to the swap marketplace.</CardDescription>
+        </CardHeader>
+        <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-10">
+              <div className="space-y-6">
+                  <Card className="p-6">
                       <FormField
                         control={form.control}
-                        name="imageFile"
+                        name="uploadType"
                         render={({ field }) => (
-                          <FormItem className="mt-4">
-                            <FormLabel>Add Image</FormLabel>
+                          <FormItem className="space-y-3">
+                            <FormLabel>Image Source</FormLabel>
                             <FormControl>
-                              <div className="relative w-full h-64 border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary transition-colors bg-background">
-                                  {imagePreview ? (
-                                      <Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" />
-                                  ) : (
-                                      <>
-                                          <UploadCloud className="h-12 w-12" />
-                                          <p className="mt-2 text-center text-sm">Click to browse or drag & drop</p>
-                                      </>
-                                  )}
-                                  <Input 
-                                      type="file" 
-                                      className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
-                                      accept="image/png, image/jpeg, image/webp"
-                                      {...fileRef}
-                                      onChange={handleImageFileChange}
-                                  />
-                              </div>
+                              <RadioGroup
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  setImagePreview(null);
+                                  form.setValue('imageFile', undefined, { shouldValidate: true });
+                                  form.setValue('imageUrl', '', { shouldValidate: true });
+                                }}
+                                defaultValue={field.value}
+                                className="flex space-x-4"
+                              >
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <RadioGroupItem value="local" id="local" />
+                                  </FormControl>
+                                  <Label htmlFor="local">Upload</Label>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2">
+                                  <FormControl>
+                                    <RadioGroupItem value="url" id="url" />
+                                  </FormControl>
+                                  <Label htmlFor="url">URL</Label>
+                                </FormItem>
+                              </RadioGroup>
                             </FormControl>
-                            <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    ) : (
+
+                      {uploadType === 'local' ? (
                         <FormField
                           control={form.control}
-                          name="imageUrl"
+                          name="imageFile"
                           render={({ field }) => (
-                            <FormItem  className="mt-4">
-                              <FormLabel>Image URL</FormLabel>
+                            <FormItem className="mt-4">
+                              <FormLabel>Add Image</FormLabel>
                               <FormControl>
-                                <Input placeholder="https://example.com/image.png" {...field} onChange={(e) => {
-                                    field.onChange(e);
-                                    handleImageUrlChange(e);
-                                }} value={field.value ?? ''} />
+                                <div className="relative w-full h-64 border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary transition-colors bg-background">
+                                    {imagePreview ? (
+                                        <Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" />
+                                    ) : (
+                                        <>
+                                            <UploadCloud className="h-12 w-12" />
+                                            <p className="mt-2 text-center text-sm">Click to browse or drag & drop</p>
+                                        </>
+                                    )}
+                                    <Input 
+                                        type="file" 
+                                        className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
+                                        accept="image/png, image/jpeg, image/webp"
+                                        {...fileRef}
+                                        onChange={handleImageFileChange}
+                                    />
+                                </div>
                               </FormControl>
-                              {imagePreview && <div className="relative w-full h-64 mt-2 border rounded-lg"><Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" data-ai-hint="fashion clothing" /></div>}
+                              <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                    )}
-                </Card>
+                      ) : (
+                          <FormField
+                            control={form.control}
+                            name="imageUrl"
+                            render={({ field }) => (
+                              <FormItem  className="mt-4">
+                                <FormLabel>Image URL</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="https://example.com/image.png" {...field} onChange={(e) => {
+                                      field.onChange(e);
+                                      handleImageUrlChange(e);
+                                  }} value={field.value ?? ''} />
+                                </FormControl>
+                                {imagePreview && <div className="relative w-full h-64 mt-2 border rounded-lg"><Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" data-ai-hint="fashion clothing" /></div>}
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                      )}
+                  </Card>
 
-                <Button type="button" variant="outline" className="w-full" onClick={handleAutofill} disabled={!imagePreview || isAiLoading}>
-                <Sparkles className={`mr-2 h-4 w-4 ${isAiLoading ? 'animate-spin' : ''}`} />
-                {isAiLoading ? 'Analyzing Image...' : 'Autofill details with AI'}
-                </Button>
-            </div>
+                  <Button type="button" variant="outline" className="w-full" onClick={handleAutofill} disabled={!imagePreview || isAiLoading}>
+                  <Sparkles className={`mr-2 h-4 w-4 ${isAiLoading ? 'animate-spin' : ''}`} />
+                  {isAiLoading ? 'Analyzing Image...' : 'Autofill details with AI'}
+                  </Button>
+              </div>
 
-            <div className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Product Title</FormLabel>
-                        <FormControl><Input placeholder="e.g., Vintage Blue Jeans" {...field} /></FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Product Description</FormLabel>
-                        <FormControl><Textarea rows={5} placeholder="Describe your item, its condition, and any special features." {...field} /></FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                
-                <div className="grid grid-cols-2 gap-6">
-                <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            {['Tops', 'Dresses', 'Pants', 'Jackets', 'Accessories'].map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            {['Casual', 'Formal', 'Sport'].map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="size"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Size</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            {['XS', 'S', 'M', 'L', 'XL'].map(size => <SelectItem key={size} value={size}>{size}</SelectItem>)}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="condition"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Condition</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            {['New', 'Gently Used', 'Used'].map(con => <SelectItem key={con} value={con}>{con}</SelectItem>)}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                </div>
-                <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl><Input placeholder="vintage, cotton, blue (comma-separated)" {...field} /></FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? "Listing Item..." : "List Item"}</Button>
-            </div>
-        </form>
-      </Form>
-      </CardContent>
-    </Card>
+              <div className="space-y-6">
+                  <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Product Title</FormLabel>
+                          <FormControl><Input placeholder="e.g., Vintage Blue Jeans" {...field} /></FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Product Description</FormLabel>
+                          <FormControl><Textarea rows={5} placeholder="Describe your item, its condition, and any special features." {...field} /></FormControl>
+                          <FormMessage />
+                          </FormItem>
+                      )}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-6">
+                  <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                              {['Tops', 'Dresses', 'Pants', 'Jackets', 'Accessories'].map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                          </SelectContent>
+                          </Select>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                              {['Casual', 'Formal', 'Sport'].map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                          </SelectContent>
+                          </Select>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="size"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Size</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                              {['XS', 'S', 'M', 'L', 'XL'].map(size => <SelectItem key={size} value={size}>{size}</SelectItem>)}
+                          </SelectContent>
+                          </Select>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="condition"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Condition</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                              {['New', 'Gently Used', 'Used'].map(con => <SelectItem key={con} value={con}>{con}</SelectItem>)}
+                          </SelectContent>
+                          </Select>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                  </div>
+                  <FormField
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Tags</FormLabel>
+                      <FormControl><Input placeholder="vintage, cotton, blue (comma-separated)" {...field} /></FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? "Listing Item..." : "List Item"}</Button>
+              </div>
+          </form>
+        </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
