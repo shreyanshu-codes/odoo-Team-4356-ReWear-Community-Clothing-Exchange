@@ -1,4 +1,4 @@
-Problem Statement : ReWear – Community Clothing Exchange
+Problem Statement for hackathon : ReWear – Community Clothing Exchange
 
 Members : 
 
