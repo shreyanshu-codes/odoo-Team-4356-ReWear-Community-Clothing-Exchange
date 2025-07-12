@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { Recycle } from 'lucide-react';
+import { getUserByEmail } from '@/lib/mockApi';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -57,10 +58,11 @@ export default function LoginPage() {
         });
         router.push('/dashboard');
       } else {
+        const userExists = getUserByEmail(values.email);
         toast({
           variant: "destructive",
           title: "Login Failed",
-          description: "Invalid credentials. Please try again.",
+          description: userExists ? "Incorrect password. Please try again." : "No account found with this email.",
         });
       }
     } catch (error) {
