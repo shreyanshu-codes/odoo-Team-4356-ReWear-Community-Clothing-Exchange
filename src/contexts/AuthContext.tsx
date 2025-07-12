@@ -3,17 +3,14 @@
 
 import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Session, User as SupabaseAuthUser } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { User as FirebaseAuthUser, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import type { User } from '@/lib/types';
-import * as api from '@/lib/mockApi';
 
 interface AuthContextType {
   user: User | null;
-  supabaseUser: SupabaseAuthUser | null;
-  session: Session | null;
+  firebaseUser: FirebaseAuthUser | null;
   login: (email: string, password: string) => Promise<{ user: User | null; error: any | null }>;
   signup: (name: string, email: string, password: string) => Promise<{ user: User | null; error: any | null }>;
   logout: () => void;
@@ -25,123 +22,92 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [supabaseUser, setSupabaseUser] = useState<SupabaseAuthUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseAuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchUserData = useCallback(async (auth_user: SupabaseAuthUser | null) => {
+  const fetchUserData = useCallback(async (auth_user: FirebaseAuthUser | null) => {
     if (auth_user) {
-      setSupabaseUser(auth_user);
-      const userDocRef = doc(db, 'users', auth_user.id);
+      const userDocRef = doc(db, 'users', auth_user.uid);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as User;
-        setUser({ ...userData, id: auth_user.id });
+        setUser({ ...userData, id: auth_user.uid });
       } else {
-        // This handles cases where a user might exist in Supabase auth but not Firestore
-        // e.g., if Firestore document creation failed during signup.
         setUser(null);
       }
     } else {
-      setSupabaseUser(null);
       setUser(null);
     }
+    setFirebaseUser(auth_user);
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    const getSession = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setSupabaseUser(session?.user ?? null);
-        await fetchUserData(session?.user ?? null);
-        setLoading(false);
-    }
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      await fetchUserData(user);
+    });
 
-    getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setSupabaseUser(session?.user ?? null);
-        await fetchUserData(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      subscription?.unsubscribe();
-    };
+    return () => unsubscribe();
   }, [fetchUserData]);
 
-
   const refreshUser = useCallback(async () => {
-    if (supabaseUser) {
+    if (firebaseUser) {
       setLoading(true);
-      await fetchUserData(supabaseUser);
+      await fetchUserData(firebaseUser);
     }
-  }, [supabaseUser, fetchUserData]);
+  }, [firebaseUser, fetchUserData]);
 
   const login = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      return { user: null, error };
-    }
-    if (data.user) {
-      const userDocRef = doc(db, 'users', data.user.id);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const authUser = userCredential.user;
+      const userDocRef = doc(db, 'users', authUser.uid);
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data() as User;
-        const finalUser = { ...userData, id: data.user.id };
+        const finalUser = { ...userData, id: authUser.uid };
         setUser(finalUser);
         return { user: finalUser, error: null };
       }
+      return { user: null, error: { message: "User data not found." } };
+    } catch (error: any) {
+      return { user: null, error };
     }
-    return { user: null, error: { message: "User not found in database." } };
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name,
-        },
-      },
-    });
-
-    if (error) {
-      return { user: null, error };
-    }
-
-    if (data.user) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const authUser = userCredential.user;
+      
       const newUser: User = {
-        id: data.user.id,
+        id: authUser.uid,
         name,
         email,
         points: 500,
         role: email === 'admin@rewear.com' ? 'admin' : 'user',
         avatarUrl: `https://placehold.co/100x100.png`,
       };
-      await setDoc(doc(db, 'users', data.user.id), { ...newUser, createdAt: serverTimestamp() });
+      
+      await setDoc(doc(db, 'users', authUser.uid), { ...newUser, createdAt: serverTimestamp() });
       setUser(newUser);
+      
       return { user: newUser, error: null };
+    } catch (error: any) {
+      return { user: null, error };
     }
-    return { user: null, error: { message: "Could not create user."} };
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
     setUser(null);
-    setSupabaseUser(null);
-    setSession(null);
+    setFirebaseUser(null);
     router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, supabaseUser, session, login, signup, logout, loading, refreshUser }}>
+    <AuthContext.Provider value={{ user, firebaseUser, login, signup, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

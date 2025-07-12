@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -67,14 +68,14 @@ export default function SignupPage() {
     if (user) {
       toast({
         title: "Account Created!",
-        description: "Welcome to ReWear! Please check your email to confirm your account.",
+        description: "Welcome to ReWear! You've been logged in.",
       });
       router.push('/dashboard');
     }
   }
 
   return (
-    <div className="container flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
+    <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
         <Card className="w-full max-w-sm">
            <CardHeader className="text-center">
                 <div className="flex flex-col items-center justify-center mb-4">
@@ -83,7 +84,7 @@ export default function SignupPage() {
                 <CardTitle>Create an Account</CardTitle>
                 <CardDescription>Join the ReWear community today.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
@@ -144,7 +145,7 @@ export default function SignupPage() {
                 </form>
               </Form>
           </CardContent>
-          <CardFooter className="text-center text-sm flex-col">
+          <CardFooter className="text-center text-sm flex-col p-6 pt-0">
             <p>
                 Already have an account?{' '}
                 <Link href="/login" className="underline text-primary font-medium">
