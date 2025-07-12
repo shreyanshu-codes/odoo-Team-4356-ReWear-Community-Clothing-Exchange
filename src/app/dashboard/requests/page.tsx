@@ -46,8 +46,7 @@ export default function SwapRequestsPage() {
     if (!swap.item || !swap.requester || !user) return;
 
     try {
-      updateSwap({ ...swap, status: newStatus });
-
+      
       if (newStatus === 'accepted') {
         const itemOwner = user;
         const itemRequester = swap.requester;
@@ -56,8 +55,8 @@ export default function SwapRequestsPage() {
 
         // Swap ownership if an item was offered
         if(offeredItem) {
-            updateItem({ ...requestedItem, userId: itemRequester.id, status: 'available' });
-            updateItem({ ...offeredItem, userId: itemOwner.id, status: 'available' });
+            updateItem({ ...requestedItem, userId: itemRequester.id, status: 'swapped' });
+            updateItem({ ...offeredItem, userId: itemOwner.id, status: 'swapped' });
 
              toast({
               title: "Swap Accepted!",
@@ -72,14 +71,14 @@ export default function SwapRequestsPage() {
               description: `You've swapped "${requestedItem.title}" with ${itemRequester.name}.`
             });
         }
-
-      } else {
+        updateSwap({ ...swap, status: newStatus });
+      } else { // rejected
         // If rejected, make both items available again
         updateItem({ ...swap.item, status: 'available' });
         if (swap.offeredItem) {
           updateItem({ ...swap.offeredItem, status: 'available' });
         }
-
+        updateSwap({ ...swap, status: newStatus });
         toast({
           title: "Swap Rejected",
           description: `You have rejected the request for "${swap.item.title}".`
@@ -112,9 +111,9 @@ export default function SwapRequestsPage() {
         <CardDescription>Manage swap requests for your items from other users.</CardDescription>
       </CardHeader>
       <CardContent>
-        {requests.length > 0 ? (
+        {requests.filter(r => r.status === 'pending').length > 0 ? (
           <div className="space-y-4">
-            {requests.map(req => (
+            {requests.filter(r => r.status === 'pending').map(req => (
               <Card key={req.id}>
                 <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                    <div className="flex items-center gap-4 flex-1">

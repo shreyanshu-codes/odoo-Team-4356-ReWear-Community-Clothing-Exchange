@@ -60,8 +60,13 @@ export default function ItemDetailPage() {
         ownerId: item.userId,
         offeredItemId: selectedItemToSwap.id 
       });
+      // Mark both items as pending swap
+      updateItem({ ...item, status: 'pending_swap' });
+      updateItem({ ...selectedItemToSwap, status: 'pending_swap' });
+
       toast({ title: 'Success', description: 'Swap request sent! The owner has been notified.' });
       setIsSwapDialogOpen(false);
+      setSelectedItemToSwap(null); // Reset selection
       router.push('/dashboard/swaps');
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to send swap request.' });

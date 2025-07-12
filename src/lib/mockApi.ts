@@ -64,7 +64,7 @@ export const addUser = (user: Omit<User, 'id' | 'points' | 'role' | 'avatarUrl'>
   const newUser: User = { 
     ...user, 
     id: Date.now(), 
-    points: 10, // Starting points
+    points: 500, // Starting points
     role: 'user',
     avatarUrl: `https://placehold.co/100x100.png`
   };
