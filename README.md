@@ -6,7 +6,7 @@ Member 1 : Mayank Dayal
 Member 2 : Shreyanshu Banerjee
 Member 3 : Ayush Virendrakumar Survanshi
 
-Gmails :
+Emails :
 
 Member 1 : mayankdl203@gmail.com
 Member 2 : sbwork130504@gmail.com
