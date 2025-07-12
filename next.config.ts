@@ -82,6 +82,12 @@ const nextConfig: NextConfig = {
         hostname: 'assets.grok.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.jackjones.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
