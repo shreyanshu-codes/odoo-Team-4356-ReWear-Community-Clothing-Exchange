@@ -20,7 +20,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -29,6 +29,10 @@ export default function DashboardLayout({
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    refreshUser();
+  }, [pathname, refreshUser]);
 
   if (loading || !user) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;

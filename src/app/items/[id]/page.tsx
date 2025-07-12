@@ -22,7 +22,7 @@ import { ArrowLeft, UserCircle } from 'lucide-react';
 export default function ItemDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, login } = useAuth(); // We need to update user context, so let's get login too
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   
   const [item, setItem] = useState<Item | null>(null);
@@ -72,7 +72,7 @@ export default function ItemDetailPage() {
       updateItem(updatedItem);
       
       // Refresh user in context
-      login(user.email, user.password);
+      refreshUser();
 
       toast({ title: 'Success!', description: `${item.title} has been redeemed.` });
       router.push('/dashboard');

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@/lib/types';
 import * as api from '@/lib/mockApi';
@@ -11,6 +11,7 @@ interface AuthContextType {
   signup: (name: string, email: string, password: string) => Promise<User | null>;
   logout: () => void;
   loading: boolean;
+  refreshUser: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,26 +23,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
+  const refreshUser = useCallback(() => {
     try {
       const session = localStorage.getItem(SESSION_KEY);
       if (session) {
         const sessionUser = JSON.parse(session) as User;
-        // Re-validate user from "DB"
         const dbUser = api.getUserById(sessionUser.id);
         if (dbUser) {
           setUser(dbUser);
         } else {
-          localStorage.removeItem(SESSION_KEY);
+          logout();
         }
       }
     } catch (error) {
       console.error('Failed to parse session data:', error);
-      localStorage.removeItem(SESSION_KEY);
-    } finally {
-      setLoading(false);
+      logout();
     }
   }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    refreshUser();
+    setLoading(false);
+  }, [refreshUser]);
 
   const login = async (email: string, password: string): Promise<User | null> => {
     const foundUser = api.getUserByEmail(email);
@@ -70,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading, refreshUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );
