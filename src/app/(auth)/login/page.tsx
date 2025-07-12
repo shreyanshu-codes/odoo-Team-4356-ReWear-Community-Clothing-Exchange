@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { Recycle } from 'lucide-react';
 import { FirebaseError } from 'firebase/app';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -83,51 +84,58 @@ export default function LoginPage() {
 
   return (
     <div className="container flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
-      <div className="w-full max-w-sm">
-         <div className="flex flex-col items-center justify-center mb-8">
-            <Recycle className="h-12 w-12 text-primary" />
-            <h1 className="text-2xl font-bold mt-2">ReWear</h1>
-        </div>
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="jane.doe@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
-                {isLoading ? 'Signing In...' : 'Login'}
-              </Button>
-            </form>
-          </Form>
-          <div className="mt-4 text-center text-sm">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+            <div className="flex flex-col items-center justify-center mb-4">
+                <Recycle className="h-12 w-12 text-primary" />
+            </div>
+            <CardTitle>Welcome Back!</CardTitle>
+            <CardDescription>Log in to your ReWear account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="jane.doe@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Signing In...' : 'Login'}
+                  </Button>
+                </form>
+              </Form>
+        </CardContent>
+        <CardFooter className="text-center text-sm flex-col">
+          <p>
             Don't have an account?{' '}
-            <Link href="/signup" className="underline text-primary">
+            <Link href="/signup" className="underline text-primary font-medium">
               Register
             </Link>
-          </div>
-      </div>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

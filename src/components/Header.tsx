@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LayoutDashboard, LogOut, Recycle, Shirt, Users, Search } from 'lucide-react';
-import { Input } from './ui/input';
 
 function Logo() {
   return (
@@ -49,16 +48,12 @@ export function Header() {
             </Link>
           )}
         </nav>
-        <div className="flex flex-1 items-center justify-end gap-4">
-            <div className="relative w-full max-w-xs hidden sm:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search..." className="pl-9" />
-            </div>
+        <div className="flex flex-1 items-center justify-end gap-2">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
+                  <Avatar className="h-10 w-10 border">
                     <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="user avatar" />
                     <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                   </Avatar>
@@ -104,7 +99,7 @@ export function Header() {
               <Button asChild variant="ghost">
                 <Link href="/login">Log in</Link>
               </Button>
-              <Button asChild className="bg-accent hover:bg-accent/90">
+              <Button asChild>
                 <Link href="/signup">Register</Link>
               </Button>
             </>

@@ -20,6 +20,7 @@ import { Sparkles, UploadCloud } from 'lucide-react';
 import Image from 'next/image';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -184,105 +185,108 @@ export default function AddItemPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl font-bold mb-6">List a New Item</h1>
+    <Card>
+      <CardHeader>
+        <CardTitle>List a New Item</CardTitle>
+        <CardDescription>Fill out the details below to add a new item to the swap marketplace.</CardDescription>
+      </CardHeader>
+      <CardContent>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-10">
             <div className="space-y-6">
-
-                <FormField
-                  control={form.control}
-                  name="uploadType"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Image Source</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            setImagePreview(null);
-                            form.setValue('imageFile', undefined, { shouldValidate: true });
-                            form.setValue('imageUrl', '', { shouldValidate: true });
-                          }}
-                          defaultValue={field.value}
-                          className="flex space-x-4"
-                        >
-                          <FormItem className="flex items-center space-x-2">
-                            <FormControl>
-                              <RadioGroupItem value="local" id="local" />
-                            </FormControl>
-                            <Label htmlFor="local">Upload</Label>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2">
-                            <FormControl>
-                              <RadioGroupItem value="url" id="url" />
-                            </FormControl>
-                            <Label htmlFor="url">URL</Label>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {uploadType === 'local' ? (
-                  <FormField
-                    control={form.control}
-                    name="imageFile"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Add Image</FormLabel>
-                        <FormControl>
-                          <div className="relative w-full h-64 border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary transition-colors">
-                              {imagePreview ? (
-                                  <Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" />
-                              ) : (
-                                  <>
-                                      <UploadCloud className="h-12 w-12" />
-                                      <p className="mt-2">Click to browse or drag & drop</p>
-                                  </>
-                              )}
-                              <Input 
-                                  type="file" 
-                                  className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
-                                  accept="image/png, image/jpeg, image/webp"
-                                  {...fileRef}
-                                  onChange={handleImageFileChange}
-                              />
-                          </div>
-                        </FormControl>
-                        <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ) : (
+                <Card className="p-6">
                     <FormField
                       control={form.control}
-                      name="imageUrl"
+                      name="uploadType"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Image URL</FormLabel>
+                        <FormItem className="space-y-3">
+                          <FormLabel>Image Source</FormLabel>
                           <FormControl>
-                            <Input placeholder="https://example.com/image.png" {...field} onChange={(e) => {
-                                field.onChange(e);
-                                handleImageUrlChange(e);
-                            }} value={field.value ?? ''} />
+                            <RadioGroup
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                setImagePreview(null);
+                                form.setValue('imageFile', undefined, { shouldValidate: true });
+                                form.setValue('imageUrl', '', { shouldValidate: true });
+                              }}
+                              defaultValue={field.value}
+                              className="flex space-x-4"
+                            >
+                              <FormItem className="flex items-center space-x-2">
+                                <FormControl>
+                                  <RadioGroupItem value="local" id="local" />
+                                </FormControl>
+                                <Label htmlFor="local">Upload</Label>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-2">
+                                <FormControl>
+                                  <RadioGroupItem value="url" id="url" />
+                                </FormControl>
+                                <Label htmlFor="url">URL</Label>
+                              </FormItem>
+                            </RadioGroup>
                           </FormControl>
-                          {imagePreview && <div className="relative w-full h-64 mt-2"><Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" data-ai-hint="fashion clothing" /></div>}
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                )}
 
-                <div className="flex items-end gap-4">
-                    <Button type="button" className="w-full bg-accent hover:bg-accent/90" onClick={handleAutofill} disabled={!imagePreview || isAiLoading}>
-                    <Sparkles className={`mr-2 h-4 w-4 ${isAiLoading ? 'animate-spin' : ''}`} />
-                    {isAiLoading ? 'Analyzing...' : 'Autofill with AI'}
-                    </Button>
-                </div>
+                    {uploadType === 'local' ? (
+                      <FormField
+                        control={form.control}
+                        name="imageFile"
+                        render={({ field }) => (
+                          <FormItem className="mt-4">
+                            <FormLabel>Add Image</FormLabel>
+                            <FormControl>
+                              <div className="relative w-full h-64 border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary transition-colors bg-background">
+                                  {imagePreview ? (
+                                      <Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" />
+                                  ) : (
+                                      <>
+                                          <UploadCloud className="h-12 w-12" />
+                                          <p className="mt-2 text-center text-sm">Click to browse or drag & drop</p>
+                                      </>
+                                  )}
+                                  <Input 
+                                      type="file" 
+                                      className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
+                                      accept="image/png, image/jpeg, image/webp"
+                                      {...fileRef}
+                                      onChange={handleImageFileChange}
+                                  />
+                              </div>
+                            </FormControl>
+                            <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ) : (
+                        <FormField
+                          control={form.control}
+                          name="imageUrl"
+                          render={({ field }) => (
+                            <FormItem  className="mt-4">
+                              <FormLabel>Image URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://example.com/image.png" {...field} onChange={(e) => {
+                                    field.onChange(e);
+                                    handleImageUrlChange(e);
+                                }} value={field.value ?? ''} />
+                              </FormControl>
+                              {imagePreview && <div className="relative w-full h-64 mt-2 border rounded-lg"><Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" data-ai-hint="fashion clothing" /></div>}
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                    )}
+                </Card>
+
+                <Button type="button" variant="outline" className="w-full" onClick={handleAutofill} disabled={!imagePreview || isAiLoading}>
+                <Sparkles className={`mr-2 h-4 w-4 ${isAiLoading ? 'animate-spin' : ''}`} />
+                {isAiLoading ? 'Analyzing Image...' : 'Autofill details with AI'}
+                </Button>
             </div>
 
             <div className="space-y-6">
@@ -386,10 +390,11 @@ export default function AddItemPage() {
                     </FormItem>
                 )}
                 />
-                <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>{isLoading ? "Listing Item..." : "List Item"}</Button>
+                <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? "Listing Item..." : "List Item"}</Button>
             </div>
         </form>
       </Form>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

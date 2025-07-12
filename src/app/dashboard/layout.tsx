@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Shirt, PlusCircle, History, User, GitPullRequest } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -41,23 +42,25 @@ export default function DashboardLayout({
 
   return (
     <div className="container mx-auto py-8">
-      <div className="grid md:grid-cols-[240px_1fr] gap-10">
+      <div className="grid md:grid-cols-[240px_1fr] gap-8">
         <aside>
-          <nav className="flex flex-col space-y-2">
-            {navItems.map((item) => (
-              <Button
-                key={item.href}
-                variant={pathname === item.href ? 'secondary' : 'ghost'}
-                className="justify-start"
-                asChild
-              >
-                <Link href={item.href}>
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                </Link>
-              </Button>
-            ))}
-          </nav>
+          <Card className="p-2">
+            <nav className="flex flex-col space-y-1">
+              {navItems.map((item) => (
+                <Button
+                  key={item.href}
+                  variant={pathname === item.href ? 'secondary' : 'ghost'}
+                  className="justify-start"
+                  asChild
+                >
+                  <Link href={item.href}>
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.label}
+                  </Link>
+                </Button>
+              ))}
+            </nav>
+          </Card>
         </aside>
         <main>{children}</main>
       </div>

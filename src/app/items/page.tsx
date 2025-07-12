@@ -57,48 +57,52 @@ export default function ItemsPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input 
-                placeholder="Search for items..." 
-                className="w-full pl-10 text-lg py-6 rounded-full"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-        </div>
-        <div className="flex flex-wrap items-center gap-4 mt-6">
-            <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="All">All Categories</SelectItem>
-                    <SelectItem value="Tops">Tops</SelectItem>
-                    <SelectItem value="Dresses">Dresses</SelectItem>
-                    <SelectItem value="Pants">Pants</SelectItem>
-                    <SelectItem value="Jackets">Jackets</SelectItem>
-                    <SelectItem value="Accessories">Accessories</SelectItem>
-                </SelectContent>
-            </Select>
+      <div className="mb-8 p-6 bg-card border rounded-lg">
+          <h1 className="text-3xl font-bold mb-2">Browse All Items</h1>
+          <p className="text-muted-foreground mb-6">Find your next favorite piece from our community closet.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative md:col-span-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input 
+                    placeholder="Search for items..." 
+                    className="w-full pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+            <div className="flex flex-wrap items-center gap-4 md:col-span-2 justify-start md:justify-end">
+                <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="All">All Categories</SelectItem>
+                        <SelectItem value="Tops">Tops</SelectItem>
+                        <SelectItem value="Dresses">Dresses</SelectItem>
+                        <SelectItem value="Pants">Pants</SelectItem>
+                        <SelectItem value="Jackets">Jackets</SelectItem>
+                        <SelectItem value="Accessories">Accessories</SelectItem>
+                    </SelectContent>
+                </Select>
 
-            <Select value={sort} onValueChange={setSort}>
-                <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="points-asc">Points: Low to High</SelectItem>
-                    <SelectItem value="points-desc">Points: High to Low</SelectItem>
-                </SelectContent>
-            </Select>
+                <Select value={sort} onValueChange={setSort}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="newest">Newest</SelectItem>
+                        <SelectItem value="points-asc">Points: Low to High</SelectItem>
+                        <SelectItem value="points-desc">Points: High to Low</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
         </div>
       </div>
       
       {filteredItems.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredItems.map(item => (
-            <Card key={item.id} className="overflow-hidden group transition-all hover:shadow-lg">
+            <Card key={item.id} className="overflow-hidden group transition-all hover:shadow-lg hover:-translate-y-1">
               <CardContent className="p-0">
                 <Link href={`/items/${item.id}`}>
                   <div className="aspect-square relative overflow-hidden">
