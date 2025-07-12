@@ -17,6 +17,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles, UploadCloud } from 'lucide-react';
 import Image from 'next/image';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -24,15 +26,46 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters."),
   description: z.string().min(10, "Description must be at least 10 characters."),
-  imageFile: z.any().refine((files) => files?.length == 1, "Image is required.").refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`).refine(
-    (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-    ".jpg, .jpeg, .png and .webp files are accepted."
-  ),
+  uploadType: z.enum(['local', 'url']),
+  imageFile: z.any().optional(),
+  imageUrl: z.string().optional(),
   category: z.enum(['Tops', 'Dresses', 'Pants', 'Jackets', 'Accessories']),
   type: z.enum(['Casual', 'Formal', 'Sport']),
   size: z.enum(['XS', 'S', 'M', 'L', 'XL']),
   condition: z.enum(['New', 'Gently Used', 'Used']),
   tags: z.string().min(1, "Please add at least one tag."),
+}).refine(data => {
+    if (data.uploadType === 'local') {
+        return data.imageFile?.length === 1;
+    }
+    return true;
+}, {
+    message: "Image is required.",
+    path: ['imageFile'],
+}).refine(data => {
+    if (data.uploadType === 'local' && data.imageFile?.[0]) {
+        return data.imageFile[0].size <= MAX_FILE_SIZE;
+    }
+    return true;
+}, {
+    message: `Max file size is 5MB.`,
+    path: ['imageFile'],
+}).refine(data => {
+    if (data.uploadType === 'local' && data.imageFile?.[0]) {
+        return ACCEPTED_IMAGE_TYPES.includes(data.imageFile[0].type);
+    }
+    return true;
+}, {
+    message: ".jpg, .jpeg, .png and .webp files are accepted.",
+    path: ['imageFile'],
+}).refine(data => {
+    if (data.uploadType === 'url') {
+        return z.string().url().safeParse(data.imageUrl).success;
+    }
+    return true;
+}, {
+    message: "Please enter a valid URL.",
+    path: ['imageUrl'],
 });
 
 
@@ -50,11 +83,14 @@ export default function AddItemPage() {
       title: "",
       description: "",
       tags: "",
+      uploadType: 'local',
       imageFile: undefined,
+      imageUrl: "",
     },
   });
   
   const fileRef = form.register("imageFile");
+  const uploadType = form.watch('uploadType');
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,6 +100,15 @@ export default function AddItemPage() {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    if (z.string().url().safeParse(url).success) {
+      setImagePreview(url);
     } else {
       setImagePreview(null);
     }
@@ -101,28 +146,38 @@ export default function AddItemPage() {
     }
     setIsLoading(true);
 
-    const file = values.imageFile[0];
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = () => {
-        const base64Image = reader.result as string;
+    const processSubmit = (imageBase64: string) => {
         try {
             addItem({
-              ...values,
-              userId: user.id,
-              images: [base64Image],
-              tags: values.tags.split(',').map(tag => tag.trim()),
+                ...values,
+                userId: user.id,
+                images: [imageBase64],
+                tags: values.tags.split(',').map(tag => tag.trim()),
             });
             toast({ title: "Success!", description: "Your item has been listed for approval." });
             router.push('/dashboard/items');
-          } catch (error) {
+        } catch (error) {
             toast({ variant: "destructive", title: "Error", description: "Failed to list item. Please try again." });
-          } finally {
+        } finally {
             setIsLoading(false);
-          }
-    };
-    reader.onerror = () => {
-        toast({ variant: "destructive", title: "Error", description: "Could not read the image file."});
+        }
+    }
+
+    if (values.uploadType === 'local' && values.imageFile?.[0]) {
+        const file = values.imageFile[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+            processSubmit(reader.result as string);
+        };
+        reader.onerror = () => {
+            toast({ variant: "destructive", title: "Error", description: "Could not read the image file."});
+            setIsLoading(false);
+        }
+    } else if (values.uploadType === 'url' && values.imageUrl) {
+        processSubmit(values.imageUrl);
+    } else {
+        toast({ variant: "destructive", title: "Image Error", description: "Please provide a valid image."});
         setIsLoading(false);
     }
   }
@@ -133,36 +188,93 @@ export default function AddItemPage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-10">
             <div className="space-y-6">
-                 <FormField
+
+                <FormField
                   control={form.control}
-                  name="imageFile"
+                  name="uploadType"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Add Image</FormLabel>
+                    <FormItem className="space-y-3">
+                      <FormLabel>Image Source</FormLabel>
                       <FormControl>
-                        <div className="relative w-full h-64 border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary transition-colors">
-                            {imagePreview ? (
-                                <Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" />
-                            ) : (
-                                <>
-                                    <UploadCloud className="h-12 w-12" />
-                                    <p className="mt-2">Click to browse or drag & drop</p>
-                                </>
-                            )}
-                            <Input 
-                                type="file" 
-                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
-                                accept="image/png, image/jpeg, image/webp"
-                                {...fileRef}
-                                onChange={handleImageFileChange}
-                            />
-                        </div>
+                        <RadioGroup
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setImagePreview(null);
+                            form.setValue('imageFile', undefined);
+                            form.setValue('imageUrl', '');
+                          }}
+                          defaultValue={field.value}
+                          className="flex space-x-4"
+                        >
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <RadioGroupItem value="local" id="local" />
+                            </FormControl>
+                            <Label htmlFor="local">Upload</Label>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <RadioGroupItem value="url" id="url" />
+                            </FormControl>
+                            <Label htmlFor="url">URL</Label>
+                          </FormItem>
+                        </RadioGroup>
                       </FormControl>
-                      <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {uploadType === 'local' ? (
+                  <FormField
+                    control={form.control}
+                    name="imageFile"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Add Image</FormLabel>
+                        <FormControl>
+                          <div className="relative w-full h-64 border-2 border-dashed rounded-lg flex flex-col justify-center items-center text-muted-foreground hover:border-primary transition-colors">
+                              {imagePreview ? (
+                                  <Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" />
+                              ) : (
+                                  <>
+                                      <UploadCloud className="h-12 w-12" />
+                                      <p className="mt-2">Click to browse or drag & drop</p>
+                                  </>
+                              )}
+                              <Input 
+                                  type="file" 
+                                  className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
+                                  accept="image/png, image/jpeg, image/webp"
+                                  {...fileRef}
+                                  onChange={handleImageFileChange}
+                              />
+                          </div>
+                        </FormControl>
+                        <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                    <FormField
+                      control={form.control}
+                      name="imageUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Image URL</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://example.com/image.png" {...field} onChange={(e) => {
+                                field.onChange(e);
+                                handleImageUrlChange(e);
+                            }} />
+                          </FormControl>
+                          {imagePreview && <div className="relative w-full h-64 mt-2"><Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" /></div>}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                )}
 
                 <div className="flex items-end gap-4">
                     <Button type="button" className="w-full bg-accent hover:bg-accent/90" onClick={handleAutofill} disabled={!imagePreview || isAiLoading}>
