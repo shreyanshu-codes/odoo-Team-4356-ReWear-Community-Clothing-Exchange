@@ -28,6 +28,8 @@ export interface Swap {
   itemId: number;
   requesterId: number;
   ownerId: number;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
   createdAt: string;
 }
+
+    
