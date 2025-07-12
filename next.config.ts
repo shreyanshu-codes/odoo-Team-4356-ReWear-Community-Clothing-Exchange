@@ -58,6 +58,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'tigc.in',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.digitalcontent.marksandspencer.app',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
   env: {

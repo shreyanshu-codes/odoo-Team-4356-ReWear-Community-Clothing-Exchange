@@ -24,7 +24,7 @@ export default function Home() {
   useEffect(() => {
     const allItems = getItems();
     // In a real app, you'd have a 'featured' flag. Here we just take the first few.
-    setFeaturedItems(allItems.slice(0, 6));
+    setFeaturedItems(allItems.slice(0, 10));
   }, []);
 
   return (
