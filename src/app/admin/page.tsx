@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { getItems, getUsers, updateItem } from '@/lib/mockApi';
 import type { Item, User } from '@/lib/types';
@@ -11,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Eye } from 'lucide-react';
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
@@ -24,13 +25,14 @@ export default function AdminPage() {
   useEffect(() => {
     if (!loading) {
       if (!user || user.role !== 'admin') {
+        toast({ variant: 'destructive', title: 'Access Denied', description: 'You must be an admin to view this page.' });
         router.push('/');
         return;
       }
       setItems(getItems());
       setUsers(getUsers());
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, toast]);
 
   const handleItemStatusChange = (itemToUpdate: Item, newStatus: 'available' | 'rejected') => {
     const updated = updateItem({ ...itemToUpdate, status: newStatus });
@@ -43,7 +45,7 @@ export default function AdminPage() {
   };
 
   if (loading || !user || user.role !== 'admin') {
-    return <div className="container mx-auto py-12 text-center">Access Denied</div>;
+    return <div className="container mx-auto py-12 text-center">Loading or Access Denied...</div>;
   }
   
   return (
@@ -79,8 +81,18 @@ export default function AdminPage() {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.title}</TableCell>
                       <TableCell>{users.find(u => u.id === item.userId)?.name || 'Unknown'}</TableCell>
-                      <TableCell><Badge variant={item.status === 'available' ? 'default' : 'secondary'}>{item.status}</Badge></TableCell>
-                      <TableCell className="text-right">
+                      <TableCell><Badge 
+                        variant={
+                            item.status === 'available' ? 'default' 
+                            : item.status === 'rejected' ? 'destructive'
+                            : 'secondary'
+                        }
+                        >{item.status}
+                        </Badge></TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button asChild variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700">
+                          <Link href={`/items/${item.id}`}><Eye className="h-4 w-4" /></Link>
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
