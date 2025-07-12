@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -15,6 +16,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -22,20 +24,48 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters."),
   description: z.string().min(10, "Description must be at least 10 characters."),
-  image: z
-    .any()
-    .refine((files) => files?.length == 1, "Image is required.")
-    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
-    .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      ".jpg, .jpeg, .png and .webp files are accepted."
-    ),
+  imageType: z.enum(['url', 'upload']),
+  imageUrl: z.string().optional(),
+  imageFile: z.any().optional(),
   category: z.enum(['Tops', 'Dresses', 'Pants', 'Jackets', 'Accessories']),
   type: z.enum(['Casual', 'Formal', 'Sport']),
   size: z.enum(['XS', 'S', 'M', 'L', 'XL']),
   condition: z.enum(['New', 'Gently Used', 'Used']),
   tags: z.string().min(1, "Please add at least one tag."),
+}).refine(data => {
+    if (data.imageType === 'url') {
+        return !!data.imageUrl && z.string().url().safeParse(data.imageUrl).success;
+    }
+    return true;
+}, {
+    message: "A valid image URL is required.",
+    path: ["imageUrl"],
+}).refine(data => {
+    if (data.imageType === 'upload') {
+        return data.imageFile?.length == 1;
+    }
+    return true;
+}, {
+    message: "Image is required.",
+    path: ["imageFile"],
+}).refine(data => {
+    if (data.imageType === 'upload' && data.imageFile?.[0]) {
+        return data.imageFile?.[0]?.size <= MAX_FILE_SIZE;
+    }
+    return true;
+}, {
+    message: `Max file size is 5MB.`,
+    path: ["imageFile"],
+}).refine(data => {
+    if (data.imageType === 'upload' && data.imageFile?.[0]) {
+        return ACCEPTED_IMAGE_TYPES.includes(data.imageFile?.[0]?.type);
+    }
+    return true;
+}, {
+    message: ".jpg, .jpeg, .png and .webp files are accepted.",
+    path: ["imageFile"],
 });
+
 
 export default function AddItemPage() {
   const router = useRouter();
@@ -49,12 +79,16 @@ export default function AddItemPage() {
     defaultValues: {
       title: "",
       description: "",
-      image: undefined,
       tags: "",
+      imageType: 'url',
+      imageUrl: "",
+      imageFile: undefined,
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const imageType = form.watch("imageType");
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -62,12 +96,23 @@ export default function AddItemPage() {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-      form.setValue("image", e.target.files);
+      form.setValue("imageFile", e.target.files);
     } else {
       setImagePreview(null);
-      form.setValue("image", undefined);
+      form.setValue("imageFile", undefined);
     }
   };
+  
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    if (z.string().url().safeParse(url).success) {
+        setImagePreview(url);
+    } else {
+        setImagePreview(null);
+    }
+    form.setValue("imageUrl", url);
+  }
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -76,28 +121,39 @@ export default function AddItemPage() {
     }
     setIsLoading(true);
 
-    const file = values.image[0];
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = () => {
-      try {
-        const base64Image = reader.result as string;
-        addItem({
-          ...values,
-          userId: user.id,
-          images: [base64Image],
-          tags: values.tags.split(',').map(tag => tag.trim()),
-        });
-        toast({ title: "Success!", description: "Your item has been listed for approval." });
-        router.push('/dashboard/items');
-      } catch (error) {
-        toast({ variant: "destructive", title: "Error", description: "Failed to list item. Please try again." });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    reader.onerror = () => {
-        toast({ variant: "destructive", title: "Error", description: "Could not read the image file."});
+    const processAndAddItem = (imageUrl: string) => {
+        try {
+            addItem({
+              ...values,
+              userId: user.id,
+              images: [imageUrl],
+              tags: values.tags.split(',').map(tag => tag.trim()),
+            });
+            toast({ title: "Success!", description: "Your item has been listed for approval." });
+            router.push('/dashboard/items');
+          } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to list item. Please try again." });
+          } finally {
+            setIsLoading(false);
+          }
+    }
+
+    if (values.imageType === 'url' && values.imageUrl) {
+        processAndAddItem(values.imageUrl);
+    } else if (values.imageType === 'upload' && values.imageFile?.[0]) {
+        const file = values.imageFile[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+            const base64Image = reader.result as string;
+            processAndAddItem(base64Image);
+        };
+        reader.onerror = () => {
+            toast({ variant: "destructive", title: "Error", description: "Could not read the image file."});
+            setIsLoading(false);
+        }
+    } else {
+        toast({ variant: "destructive", title: "Image Error", description: "Please provide a valid image URL or upload a file."});
         setIsLoading(false);
     }
   }
@@ -134,20 +190,65 @@ export default function AddItemPage() {
               )}
             />
              <FormField
-              control={form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Image</FormLabel>
-                   {imagePreview && <img src={imagePreview} alt="Image Preview" className="w-32 h-32 object-cover rounded-md" />}
-                  <FormControl>
-                     <Input type="file" accept="image/png, image/jpeg, image/webp" onChange={handleImageChange} />
-                  </FormControl>
-                  <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
-                  <FormMessage />
-                </FormItem>
+                control={form.control}
+                name="imageType"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Image Source</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex space-x-4"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl><RadioGroupItem value="url" /></FormControl>
+                          <FormLabel className="font-normal">From URL</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl><RadioGroupItem value="upload" /></FormControl>
+                          <FormLabel className="font-normal">Upload from Device</FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {imageType === 'url' ? (
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Image URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://example.com/image.png" {...field} onChange={handleImageUrlChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="imageFile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Image File</FormLabel>
+                      <FormControl>
+                        <Input type="file" accept="image/png, image/jpeg, image/webp" onChange={handleImageFileChange} />
+                      </FormControl>
+                      <FormDescription>Upload a clear photo of your item (PNG, JPG, WEBP, max 5MB).</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
+
+             {imagePreview && <img src={imagePreview} alt="Image Preview" className="w-32 h-32 object-cover rounded-md" />}
+
             <div className="grid md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -232,3 +333,5 @@ export default function AddItemPage() {
     </Card>
   );
 }
+
+    

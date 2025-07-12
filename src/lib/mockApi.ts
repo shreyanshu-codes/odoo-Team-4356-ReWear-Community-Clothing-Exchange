@@ -1,3 +1,4 @@
+
 // This file simulates a backend API using localStorage.
 // It's client-side only and should not be used in server components.
 "use client";
@@ -95,6 +96,11 @@ export const updateItem = (updatedItem: Item): Item | undefined => {
     setStore('rewear_items', items);
     return updatedItem;
 };
+export const deleteItem = (itemId: number): void => {
+    let items = getItems();
+    items = items.filter(item => item.id !== itemId);
+    setStore('rewear_items', items);
+};
 
 // Swap Functions
 export const getSwaps = (): Swap[] => getStore<Swap>('rewear_swaps');
@@ -116,3 +122,5 @@ export const addSwap = (swap: Omit<Swap, 'id' | 'status' | 'createdAt'>): Swap =
   }
   return newSwap;
 }
+
+    

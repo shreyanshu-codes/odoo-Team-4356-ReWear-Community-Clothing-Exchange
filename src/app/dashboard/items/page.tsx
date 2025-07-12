@@ -1,21 +1,36 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
-import { getItemsByUserId } from '@/lib/mockApi';
+import { getItemsByUserId, deleteItem } from '@/lib/mockApi';
 import type { Item } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Edit } from 'lucide-react';
+import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function MyItemsPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [userItems, setUserItems] = useState<Item[]>([]);
 
   useEffect(() => {
@@ -24,6 +39,15 @@ export default function MyItemsPage() {
       setUserItems(items);
     }
   }, [user]);
+  
+  const handleRemoveItem = (itemId: number) => {
+    deleteItem(itemId);
+    setUserItems(userItems.filter(item => item.id !== itemId));
+    toast({
+        title: "Item Removed",
+        description: "Your item has been successfully removed.",
+    });
+  };
 
   if (!user) return null;
 
@@ -63,6 +87,28 @@ export default function MyItemsPage() {
                     <Button variant="ghost" size="icon" onClick={() => router.push(`/items/${item.id}`)}>
                       <Edit className="h-4 w-4" />
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your
+                            item listing.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleRemoveItem(item.id)} className="bg-destructive hover:bg-destructive/90">
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}
@@ -80,3 +126,5 @@ export default function MyItemsPage() {
     </Card>
   );
 }
+
+    
