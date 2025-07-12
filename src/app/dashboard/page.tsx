@@ -4,13 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getItemsByUserId, getSwapsByUserId, getItemById } from '@/lib/mockApi';
 import type { Item, Swap } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface EnrichedSwap extends Swap {
   itemTitle?: string;
@@ -21,6 +20,12 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [userItems, setUserItems] = useState<Item[]>([]);
   const [userSwaps, setUserSwaps] = useState<EnrichedSwap[]>([]);
+  
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map((n) => n[0]).join('').toUpperCase();
+  };
+
 
   useEffect(() => {
     if (user) {
@@ -43,38 +48,64 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold font-headline">Welcome, {user.name}!</h1>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+      <div className="flex items-center gap-4">
+        <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
+            { user.avatarUrl ? (
+                <Image src={user.avatarUrl} alt={user.name} width={96} height={96} className="rounded-full object-cover" data-ai-hint="user avatar" />
+            ) : (
+                <span className="text-4xl font-bold">{getInitials(user.name)}</span>
+            )}
+        </div>
+        <div>
+            <h1 className="text-3xl font-bold font-headline">{user.name}</h1>
+            <p className="text-lg text-muted-foreground">{user.email}</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+            <CardHeader>
+                <CardTitle>Points</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-4xl font-bold text-primary">{user.points}</p>
+            </CardContent>
+        </Card>
+         <Card>
+            <CardHeader>
+                <CardTitle>Items Listed</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-4xl font-bold">{userItems.length}</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Total Swaps</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-4xl font-bold">{userSwaps.length}</p>
+            </CardContent>
+        </Card>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Points</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold text-primary">{user.points}</p>
-          <CardDescription className="mt-1">Use points to redeem items from other users.</CardDescription>
-        </CardContent>
-      </Card>
+      <Separator />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Your Uploaded Items</CardTitle>
-            <CardDescription>Manage the items you've listed for swapping.</CardDescription>
-          </div>
-          <Button asChild>
-            <Link href="/dashboard/add-item"><PlusCircle className="mr-2 h-4 w-4" /> List New Item</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {userItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userItems.slice(0,3).map(item => (
+      <div>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">My Listings</h2>
+            <Button asChild variant="outline">
+                <Link href="/dashboard/items">View All</Link>
+            </Button>
+        </div>
+         {userItems.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {userItems.slice(0,4).map(item => (
                 <Link key={item.id} href={`/items/${item.id}`}>
                     <Card className="overflow-hidden group">
-                        <div className="aspect-video relative">
-                            <Image src={item.images[0]} alt={item.title} fill className="object-cover" data-ai-hint="fashion clothing" />
-                            <Badge className="absolute top-2 right-2">{item.status}</Badge>
+                        <div className="aspect-square relative">
+                            <Image src={item.images[0]} alt={item.title} fill className="object-cover transition-transform group-hover:scale-105" data-ai-hint="fashion clothing" />
                         </div>
                         <div className="p-3">
                             <h3 className="font-semibold truncate">{item.title}</h3>
@@ -84,53 +115,51 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">You haven't listed any items yet.</p>
+            <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">You haven't listed any items yet.</p>
+                 <Button asChild className="mt-4 bg-accent hover:bg-accent/90">
+                    <Link href="/dashboard/add-item">List Your First Item</Link>
+                </Button>
+            </div>
           )}
-          {userItems.length > 3 && 
-            <div className="text-center mt-4">
-              <Button variant="outline" asChild><Link href="/dashboard/items">View All Your Items</Link></Button>
-            </div>
-          }
-        </CardContent>
-      </Card>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Swap History</CardTitle>
-          <CardDescription>Track your ongoing and completed swaps.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Item</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {userSwaps.length > 0 ? (
-                userSwaps.slice(0, 3).map(swap => (
-                  <TableRow key={swap.id}>
-                    <TableCell className="font-medium">{swap.itemTitle || "Unknown Item"}</TableCell>
-                    <TableCell><Badge variant="secondary">{swap.status}</Badge></TableCell>
-                    <TableCell>{new Date(swap.createdAt).toLocaleDateString()}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center">No swap history found.</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-           {userSwaps.length > 3 && 
-            <div className="text-center mt-4">
-              <Button variant="outline" asChild><Link href="/dashboard/swaps">View All Swaps</Link></Button>
+      <Separator />
+
+      <div>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">My Purchases</h2>
+            <Button asChild variant="outline">
+                <Link href="/dashboard/swaps">View All</Link>
+            </Button>
+        </div>
+         {userSwaps.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {userSwaps.filter(s => s.requesterId === user.id && s.status === 'accepted').slice(0, 4).map(swap => (
+                    <Link key={swap.id} href={`/items/${swap.itemId}`}>
+                        <Card className="overflow-hidden group">
+                            <div className="aspect-square relative">
+                                <Image src={swap.itemImage || "https://placehold.co/400x400.png"} alt={swap.itemTitle || "Item"} fill className="object-cover transition-transform group-hover:scale-105" data-ai-hint="fashion clothing" />
+                            </div>
+                            <div className="p-3">
+                                <h3 className="font-semibold truncate">{swap.itemTitle || "Unknown Item"}</h3>
+                            </div>
+                        </Card>
+                    </Link>
+                ))}
+                {userSwaps.filter(s => s.requesterId === user.id && s.status === 'accepted').length === 0 && (
+                    <div className="text-center py-10 border-2 border-dashed rounded-lg col-span-full">
+                        <p className="text-muted-foreground">You haven't purchased any items yet.</p>
+                    </div>
+                )}
             </div>
-          }
-        </CardContent>
-      </Card>
+          ) : (
+            <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">You haven't purchased any items yet.</p>
+            </div>
+          )}
+      </div>
+
     </div>
   );
 }

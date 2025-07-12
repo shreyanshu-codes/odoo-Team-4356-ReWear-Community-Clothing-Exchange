@@ -1,6 +1,3 @@
-
-// This file simulates a backend API using localStorage.
-// It's client-side only and should not be used in server components.
 "use client";
 
 import type { User, Item, Swap } from './types';
@@ -61,7 +58,7 @@ const setStore = <T>(key: string, data: T[]) => {
 export const getUsers = (): User[] => getStore<User>('rewear_users');
 export const getUserById = (id: number): User | undefined => getUsers().find(u => u.id === id);
 export const getUserByEmail = (email: string): User | undefined => getUsers().find(u => u.email === email);
-export const addUser = (user: Omit<User, 'id' | 'points' | 'role'>): User => {
+export const addUser = (user: Omit<User, 'id' | 'points' | 'role' | 'avatarUrl'>): User => {
   const users = getUsers();
   const newUser: User = { 
     ...user, 
@@ -111,7 +108,8 @@ export const deleteItem = (itemId: number): void => {
 // Swap Functions
 export const getSwaps = (): Swap[] => getStore<Swap>('rewear_swaps');
 export const getSwapsByUserId = (userId: number): Swap[] => getSwaps().filter(s => s.requesterId === userId || s.ownerId === userId);
-export const getIncomingSwapsByUserId = (userId: number): Swap[] => getSwaps().filter(s => s.ownerId === userId && s.status === 'pending');
+export const getIncomingSwapsByUserId = (userId: number): Swap[] => getSwaps().filter(s => s.ownerId === userId);
+export const getPendingIncomingSwapsByUserId = (userId: number): Swap[] => getSwaps().filter(s => s.ownerId === userId && s.status === 'pending');
 
 export const addSwap = (swap: Omit<Swap, 'id' | 'status' | 'createdAt'>): Swap => {
   const swaps = getSwaps();
@@ -122,7 +120,8 @@ export const addSwap = (swap: Omit<Swap, 'id' | 'status' | 'createdAt'>): Swap =
     createdAt: new Date().toISOString(),
   };
   setStore<Swap>('rewear_swaps', [...swaps, newSwap]);
-  // Also update item status
+  
+  // Also update item status to 'pending swap'
   const item = getItemById(swap.itemId);
   if (item) {
     updateItem({ ...item, status: 'pending' });

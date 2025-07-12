@@ -6,19 +6,12 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
-import { getItemById, getUserById, addSwap, updateItem, updateUser } from '@/lib/mockApi';
+import { getItemById, getUserById, addSwap, updateItem, updateUser, getItems } from '@/lib/mockApi';
 import type { Item, User } from '@/lib/types';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ArrowLeft, Check, X } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ItemDetailPage() {
   const params = useParams();
@@ -28,6 +21,7 @@ export default function ItemDetailPage() {
   
   const [item, setItem] = useState<Item | null>(null);
   const [uploader, setUploader] = useState<User | null>(null);
+  const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -38,6 +32,12 @@ export default function ItemDetailPage() {
         setItem(foundItem);
         const foundUploader = getUserById(foundItem.userId);
         setUploader(foundUploader || null);
+        
+        // Fetch related items (simple logic for now)
+        const allItems = getItems();
+        setRelatedItems(
+          allItems.filter(i => i.id !== foundItem.id && i.category === foundItem.category && i.status === 'available').slice(0, 4)
+        );
       }
     }
   }, [params.id]);
@@ -85,10 +85,6 @@ export default function ItemDetailPage() {
     }
   };
 
-  const getInitials = (name?: string) => {
-    if (!name) return 'U';
-    return name.split(' ').map((n) => n[0]).join('').toUpperCase();
-  };
 
   if (!item) {
     return (
@@ -105,82 +101,105 @@ export default function ItemDetailPage() {
   const canTakeAction = user && !isOwner && item.status === 'available';
 
   return (
-    <div className="container mx-auto py-12 px-4">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-8">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to items
-      </Button>
-      <div className="grid md:grid-cols-2 gap-12">
-        <div>
-          <Carousel className="w-full">
-            <CarouselContent>
-              {item.images.map((img, index) => (
-                <CarouselItem key={index}>
-                  <Card className="overflow-hidden">
-                    <CardContent className="p-0 aspect-square relative">
-                      <Image src={img} alt={`${item.title} image ${index + 1}`} fill className="object-cover" data-ai-hint="fashion clothing" />
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {item.images.length > 1 && (
-                <>
-                    <CarouselPrevious className="left-4" />
-                    <CarouselNext className="right-4" />
-                </>
-            )}
-          </Carousel>
-        </div>
-        <div>
-          <Badge variant={item.status === 'available' ? 'default' : 'secondary'} className={`${item.status === 'available' ? 'bg-green-600 text-white' : ''}`}>
-            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-          </Badge>
-          <h1 className="text-4xl font-bold font-headline mt-2">{item.title}</h1>
-          <p className="text-2xl text-primary font-semibold mt-1">{item.points} Points</p>
-          
-          <div className="mt-6 prose prose-lg text-foreground/80">
-            <p>{item.description}</p>
-          </div>
+    <div className="container mx-auto py-8">
+      <div className="grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <Card className="overflow-hidden sticky top-24">
+                        <CardContent className="p-0 aspect-square relative">
+                            <Image src={item.images[0]} alt={item.title} fill className="object-cover" data-ai-hint="fashion clothing" />
+                        </CardContent>
+                    </Card>
+                </div>
+                <div>
+                    <h1 className="text-3xl font-bold">{item.title}</h1>
+                    <p className="text-lg text-muted-foreground mt-1">by {uploader?.name || 'Unknown'}</p>
+                    
+                    <div className="my-6">
+                        <h2 className="font-bold text-xl mb-2">Description</h2>
+                        <p className="text-foreground/80">{item.description}</p>
+                    </div>
 
-          <Card className="my-6">
-            <CardContent className="p-6 grid grid-cols-2 gap-4 text-sm">
-                <div><strong>Category:</strong> {item.category}</div>
-                <div><strong>Type:</strong> {item.type}</div>
-                <div><strong>Size:</strong> {item.size}</div>
-                <div><strong>Condition:</strong> {item.condition}</div>
-            </CardContent>
-          </Card>
-          
-          <div className="flex flex-wrap gap-2 mt-4">
-              {item.tags.map(tag => <Badge key={tag} variant="outline">#{tag}</Badge>)}
-          </div>
-          
-          {uploader && (
-            <div className="mt-6 border-t pt-6 flex items-center gap-3">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={uploader.avatarUrl} alt={uploader.name} data-ai-hint="user avatar" />
-                <AvatarFallback>{getInitials(uploader.name)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold">Listed by {uploader.name}</p>
-                <p className="text-sm text-muted-foreground">Joined on {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
-              </div>
+                    <div className="my-6">
+                        <h2 className="font-bold text-xl mb-2">Details</h2>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div><strong>Category:</strong> {item.category}</div>
+                            <div><strong>Type:</strong> {item.type}</div>
+                            <div><strong>Size:</strong> {item.size}</div>
+                            <div><strong>Condition:</strong> {item.condition}</div>
+                        </div>
+                    </div>
+                     <div className="flex flex-wrap gap-2 mt-4">
+                        {item.tags.map(tag => <Badge key={tag} variant="secondary">#{tag}</Badge>)}
+                    </div>
+                </div>
             </div>
-          )}
-
-          <div className="mt-8 flex gap-4">
-            <Button size="lg" onClick={handleSwapRequest} disabled={!canTakeAction || isLoading}>Request Swap</Button>
-            <Button size="lg" variant="outline" onClick={handleRedeem} disabled={!canTakeAction || isLoading || (user?.points ?? 0) < item.points}>
-              Redeem with Points
-            </Button>
-          </div>
-          {user && (user.points < item.points) && item.status === 'available' &&
-            <p className="text-destructive text-sm mt-2">You don't have enough points for this item.</p>
-          }
-           {isOwner &&
-            <p className="text-muted-foreground text-sm mt-2">This is your item.</p>
-          }
         </div>
+
+        <div>
+            <Card className="sticky top-24">
+                 <CardContent className="p-6 space-y-4">
+                    <p className="text-3xl font-bold text-center">{item.points} Points</p>
+                    
+                    {item.status === 'available' ? (
+                        <div className="flex items-center justify-center gap-2 text-green-600">
+                            <Check className="h-5 w-5" />
+                            <span>Available for Swap</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center gap-2 text-destructive">
+                            <X className="h-5 w-5" />
+                            <span>Not Available</span>
+                        </div>
+                    )}
+
+                    <Button size="lg" className="w-full bg-accent hover:bg-accent/90" onClick={handleSwapRequest} disabled={!canTakeAction || isLoading}>
+                        Request Swap
+                    </Button>
+                    <Button size="lg" className="w-full" variant="outline" onClick={handleRedeem} disabled={!canTakeAction || isLoading || (user?.points ?? 0) < item.points}>
+                        Redeem with Points
+                    </Button>
+                    {user && (user.points < item.points) && item.status === 'available' &&
+                        <p className="text-destructive text-sm mt-2 text-center">You don't have enough points for this item.</p>
+                    }
+                    {isOwner &&
+                        <p className="text-muted-foreground text-sm mt-2 text-center">This is your item.</p>
+                    }
+                 </CardContent>
+            </Card>
+        </div>
+      </div>
+
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold mb-6">You might also like</h2>
+         {relatedItems.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {relatedItems.map(relatedItem => (
+                <Card key={relatedItem.id} className="overflow-hidden group transition-all hover:shadow-lg">
+                  <CardContent className="p-0">
+                    <Link href={`/items/${relatedItem.id}`}>
+                      <div className="aspect-square relative overflow-hidden">
+                        <Image
+                          src={relatedItem.images[0]}
+                          alt={relatedItem.title}
+                          fill
+                          data-ai-hint="fashion clothing"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg truncate">{relatedItem.title}</h3>
+                        <p className="text-primary font-bold mt-2">{relatedItem.points} Points</p>
+                      </div>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+             <p className="text-muted-foreground">No related items found.</p>
+          )}
       </div>
     </div>
   );

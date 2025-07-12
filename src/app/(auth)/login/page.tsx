@@ -24,7 +24,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
+import { Recycle } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -75,13 +76,12 @@ export default function LoginPage() {
 
   return (
     <div className="container flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline">Welcome Back!</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
+      <div className="w-full max-w-sm">
+         <div className="flex flex-col items-center justify-center mb-8">
+            <Recycle className="h-12 w-12 text-primary" />
+            <h1 className="text-2xl font-bold mt-2">ReWear</h1>
+        </div>
+        <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
@@ -109,19 +109,18 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Signing In...' : 'Sign In'}
+              <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
+                {isLoading ? 'Signing In...' : 'Login'}
               </Button>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">
             Don't have an account?{' '}
             <Link href="/signup" className="underline text-primary">
-              Sign up
+              Register
             </Link>
           </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

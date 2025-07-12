@@ -8,13 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
   Form,
   FormControl,
   FormField,
@@ -24,7 +17,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
+import { Recycle } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -33,6 +27,10 @@ const formSchema = z.object({
   .regex(/[a-zA-Z]/, { message: "Password must contain at least one letter." })
   .regex(/[0-9]/, { message: "Password must contain at least one number." })
   .regex(/[^a-zA-Z0-9]/, { message: "Password must contain at least one symbol." }),
+  confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export default function SignupPage() {
@@ -47,6 +45,7 @@ export default function SignupPage() {
       name: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -74,12 +73,11 @@ export default function SignupPage() {
 
   return (
     <div className="container flex min-h-[calc(100vh-4rem)] items-center justify-center py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline">Join ReWear</CardTitle>
-          <CardDescription>Create an account to start swapping sustainably.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center justify-center mb-8">
+            <Recycle className="h-12 w-12 text-primary" />
+            <h1 className="text-2xl font-bold mt-2">ReWear</h1>
+        </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -121,8 +119,21 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+               <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full bg-accent hover:bg-accent/90" disabled={isLoading}>
+                {isLoading ? 'Creating Account...' : 'Register'}
               </Button>
             </form>
           </Form>
@@ -132,8 +143,7 @@ export default function SignupPage() {
               Log in
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
     </div>
   );
 }

@@ -12,7 +12,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LayoutDashboard, LogOut, Recycle, Shirt, Users } from 'lucide-react';
+import { LayoutDashboard, LogOut, Recycle, Shirt, Users, Search } from 'lucide-react';
+import { Input } from './ui/input';
 
 function Logo() {
   return (
@@ -36,24 +37,28 @@ export function Header() {
       <div className="container flex h-16 items-center">
         <Logo />
         <nav className="ml-10 hidden md:flex items-center space-x-6 text-sm font-medium">
-          <Link href="/items" className="text-foreground/60 transition-colors hover:text-foreground/80">
+          <Link href="/items" className="text-foreground/80 transition-colors hover:text-foreground">
             Browse
           </Link>
-          <Link href="/dashboard" className="text-foreground/60 transition-colors hover:text-foreground/80">
+          <Link href="/dashboard" className="text-foreground/80 transition-colors hover:text-foreground">
             Dashboard
           </Link>
           {user?.role === 'admin' && (
-            <Link href="/admin" className="text-foreground/60 transition-colors hover:text-foreground/80">
+            <Link href="/admin" className="text-foreground/80 transition-colors hover:text-foreground">
               Admin
             </Link>
           )}
         </nav>
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex flex-1 items-center justify-end gap-4">
+            <div className="relative w-full max-w-xs hidden sm:block">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search..." className="pl-9" />
+            </div>
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-9 w-9">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
                     <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint="user avatar" />
                     <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                   </Avatar>
@@ -99,8 +104,8 @@ export function Header() {
               <Button asChild variant="ghost">
                 <Link href="/login">Log in</Link>
               </Button>
-              <Button asChild>
-                <Link href="/signup">Sign Up</Link>
+              <Button asChild className="bg-accent hover:bg-accent/90">
+                <Link href="/signup">Register</Link>
               </Button>
             </>
           )}
