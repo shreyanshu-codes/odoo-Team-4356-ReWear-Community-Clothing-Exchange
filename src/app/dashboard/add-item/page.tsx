@@ -9,6 +9,7 @@ import * as z from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { addItem } from '@/lib/mockApi';
+import { generateItemDetails } from '@/ai/flows/generate-item-details';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Sparkles } from 'lucide-react';
 
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -72,6 +74,7 @@ export default function AddItemPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -112,6 +115,30 @@ export default function AddItemPage() {
     }
     form.setValue("imageUrl", url);
   }
+
+  const handleAutofill = async () => {
+    if (!imagePreview) {
+      toast({ variant: 'destructive', title: 'No Image', description: 'Please provide an image first to use AI autofill.' });
+      return;
+    }
+    setIsAiLoading(true);
+    try {
+      const result = await generateItemDetails({ photoDataUri: imagePreview });
+      form.setValue('title', result.title, { shouldValidate: true });
+      form.setValue('description', result.description, { shouldValidate: true });
+      form.setValue('category', result.category, { shouldValidate: true });
+      form.setValue('type', result.type, { shouldValidate: true });
+      form.setValue('size', result.size, { shouldValidate: true });
+      form.setValue('condition', result.condition, { shouldValidate: true });
+      form.setValue('tags', result.tags.join(', '), { shouldValidate: true });
+      toast({ title: 'Success', description: 'AI has filled in the item details.' });
+    } catch (error) {
+      console.error('AI autofill failed:', error);
+      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not generate details. Please fill them in manually.' });
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -167,28 +194,7 @@ export default function AddItemPage() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Item Title</FormLabel>
-                  <FormControl><Input placeholder="e.g., Vintage Blue Jeans" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl><Textarea placeholder="Describe your item, its condition, and any special features." {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            
              <FormField
                 control={form.control}
                 name="imageType"
@@ -197,7 +203,12 @@ export default function AddItemPage() {
                     <FormLabel>Image Source</FormLabel>
                     <FormControl>
                       <RadioGroup
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setImagePreview(null);
+                          form.setValue('imageUrl', '');
+                          form.setValue('imageFile', undefined);
+                        }}
                         defaultValue={field.value}
                         className="flex space-x-4"
                       >
@@ -247,8 +258,37 @@ export default function AddItemPage() {
                 />
               )}
 
-             {imagePreview && <img src={imagePreview} alt="Image Preview" className="w-32 h-32 object-cover rounded-md" />}
+             <div className="flex items-end gap-4">
+                {imagePreview && <img src={imagePreview} alt="Image Preview" className="w-32 h-32 object-cover rounded-md" />}
+                <Button type="button" variant="outline" onClick={handleAutofill} disabled={!imagePreview || isAiLoading}>
+                  <Sparkles className={`mr-2 h-4 w-4 ${isAiLoading ? 'animate-spin' : ''}`} />
+                  {isAiLoading ? 'Analyzing...' : 'Autofill with AI'}
+                </Button>
+            </div>
 
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Item Title</FormLabel>
+                  <FormControl><Input placeholder="e.g., Vintage Blue Jeans" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl><Textarea placeholder="Describe your item, its condition, and any special features." {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <div className="grid md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -256,7 +296,7 @@ export default function AddItemPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {['Tops', 'Dresses', 'Pants', 'Jackets', 'Accessories'].map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
@@ -272,7 +312,7 @@ export default function AddItemPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {['Casual', 'Formal', 'Sport'].map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
@@ -288,7 +328,7 @@ export default function AddItemPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Size</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Select a size" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {['XS', 'S', 'M', 'L', 'XL'].map(size => <SelectItem key={size} value={size}>{size}</SelectItem>)}
@@ -304,7 +344,7 @@ export default function AddItemPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Condition</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Select a condition" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {['New', 'Gently Used', 'Used'].map(con => <SelectItem key={con} value={con}>{con}</SelectItem>)}
@@ -333,3 +373,5 @@ export default function AddItemPage() {
     </Card>
   );
 }
+
+    
