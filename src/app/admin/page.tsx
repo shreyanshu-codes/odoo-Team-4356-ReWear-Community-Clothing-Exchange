@@ -71,9 +71,11 @@ export default function AdminPage() {
           updateUser(updatedOwner);
           toast({ title: 'Points Awarded!', description: `${itemOwner.name} received ${itemToUpdate.points} points.` });
         }
+        toast({ title: 'Item Approved!', description: `"${itemToUpdate.title}" is now available for swapping.` });
+      } else {
+        toast({ title: 'Item Rejected', description: `"${itemToUpdate.title}" has been rejected.` });
       }
       setItems(items.map(item => item.id === updated.id ? updated : item));
-      toast({ title: 'Success', description: `Item "${itemToUpdate.title}" has been ${newStatus}.` });
     } else {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update item.' });
     }
