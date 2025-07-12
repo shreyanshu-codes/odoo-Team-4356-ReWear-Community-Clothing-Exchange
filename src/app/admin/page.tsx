@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
-import { getItems, getUsers, getSwaps, updateItem, getItemById } from '@/lib/mockApi';
+import { getItems, getUsers, getSwaps, updateItem, getItemById, getUserById, updateUser } from '@/lib/mockApi';
 import type { Item, User, Swap } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -64,6 +64,14 @@ export default function AdminPage() {
   const handleItemStatusChange = (itemToUpdate: Item, newStatus: 'available' | 'rejected') => {
     const updated = updateItem({ ...itemToUpdate, status: newStatus });
     if (updated) {
+      if (newStatus === 'available') {
+        const itemOwner = getUserById(itemToUpdate.userId);
+        if (itemOwner) {
+          const updatedOwner = { ...itemOwner, points: itemOwner.points + itemToUpdate.points };
+          updateUser(updatedOwner);
+          toast({ title: 'Points Awarded!', description: `${itemOwner.name} received ${itemToUpdate.points} points.` });
+        }
+      }
       setItems(items.map(item => item.id === updated.id ? updated : item));
       toast({ title: 'Success', description: `Item "${itemToUpdate.title}" has been ${newStatus}.` });
     } else {
