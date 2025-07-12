@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle, XCircle, Eye, Search, UserCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, Search, UserCircle, Shirt } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -178,7 +178,7 @@ export default function AdminPage() {
                                      <Badge variant="secondary" className="mt-1">{item.status}</Badge>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
                                 <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleItemStatusChange(item, 'available')}>
                                     <CheckCircle className="mr-2 h-4 w-4" /> Approve
                                 </Button>
@@ -198,5 +198,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    
