@@ -1,7 +1,8 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -20,11 +21,28 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-// Auth is no longer managed by Firebase, but we might still need the instance if other services depend on it.
-// For now, it's safer to keep it. We are not using it for user login/signup.
 const auth = getAuth(app); 
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+// Enable Firestore offline persistence
+try {
+  enableIndexedDbPersistence(db, {
+    cacheSizeBytes: CACHE_SIZE_UNLIMITED
+  })
+    .then(() => {
+      console.log('Firestore offline persistence enabled.');
+    })
+    .catch((err) => {
+      if (err.code == 'failed-precondition') {
+        console.warn('Firestore offline persistence could not be enabled: Multiple tabs open.');
+      } else if (err.code == 'unimplemented') {
+        console.warn('Firestore offline persistence is not available in this browser.');
+      }
+    });
+} catch (error) {
+  console.error("Error enabling Firestore persistence: ", error);
+}
 
 
 export { app, auth, db, storage };
