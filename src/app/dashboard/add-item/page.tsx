@@ -201,8 +201,8 @@ export default function AddItemPage() {
                           onValueChange={(value) => {
                             field.onChange(value);
                             setImagePreview(null);
-                            form.setValue('imageFile', undefined);
-                            form.setValue('imageUrl', '');
+                            form.setValue('imageFile', undefined, { shouldValidate: true });
+                            form.setValue('imageUrl', '', { shouldValidate: true });
                           }}
                           defaultValue={field.value}
                           className="flex space-x-4"
@@ -268,7 +268,7 @@ export default function AddItemPage() {
                             <Input placeholder="https://example.com/image.png" {...field} onChange={(e) => {
                                 field.onChange(e);
                                 handleImageUrlChange(e);
-                            }} />
+                            }} value={field.value ?? ''} />
                           </FormControl>
                           {imagePreview && <div className="relative w-full h-64 mt-2"><Image src={imagePreview} alt="Image Preview" fill className="object-cover rounded-lg" data-ai-hint="fashion clothing" /></div>}
                           <FormMessage />
